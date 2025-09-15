@@ -174,7 +174,7 @@ TX -> "~25014642E00201FD30\r"
 RX <- "~25014600F07A0001100CC70CC80CC70CC70CC70CC50CC60CC70CC70CC60CC70CC60CC60CC70CC60CC7060B9B0B990B990B990BB30BBCFF1FCCCD12D303286A008C2710E1E4\r"
 
 ```
-The code of nkinnan was lacking the ability to monitor chained batteries, and rewriting it was mostly not possible because of the way it was initially written.
+The code of @nkinnan was lacking the ability to monitor chained batteries, and rewriting it was mostly not possible because of the way it was initially written.
 
 ## Debugging
 
@@ -202,3 +202,5 @@ uart:
 ## References
 
 * https://github.com/nkinnan/esphome-pace-bms
+
+credit goes to @nkinnan and @syssi for giving me the possibility to learn in a blink of an eye how to transform a problem into a solution, THANKS!
