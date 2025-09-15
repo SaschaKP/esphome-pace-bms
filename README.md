@@ -166,8 +166,7 @@ None.
 
 ## Protocol
 
-PACE RS232 protocol is really a mess, but anyway you can find sufficient code and docs in: https://github.com/nkinnan/esphome-pace-bms from whom I read and understood some code, and
-also from inspecting the code with a c# decompiler with tools like Jetbrain_dotpeek, with whom I read the specific parts necessary to retrieve correctly the data from my BMSs
+PACE RS232 protocol is really a mess, but anyway you can find sufficient code and docs in: https://github.com/nkinnan/esphome-pace-bms from whom I read and understood some code, and also from inspecting the code of pbmstool with a c# decompiler with tools like Jetbrain_dotpeek, with whom I read the specific parts necessary to retrieve correctly the data from my BMSs
 
 ```
 $ echo -ne "~20004642E00200FD37\r" | hexdump -ve '1/1 "%.2X."'
