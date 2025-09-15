@@ -32,9 +32,9 @@ ESPHome component to monitor a Pace BMS via UART or RS485
 Please be aware of the different RJ11 pinout
 
 Also consider that if you're using the VTAC from Deye, they should have given you a wifi module.
-That specific module can be reprogrammed and used with my software, upon opening it there are the pinout
-to rewrite firmware, it should use a ESP32-S device, that will be inserted into the ESI port of the
-deye inverter.
+That specific module can be reprogrammed and used with my software, upon opening it there are the pinouts
+stamped on the board, that will allow you to rewrite firmware, it should use a ESP32-S device, that will 
+be inserted into the ESI port of the deye inverter (External Serial Interface).
 
 ## Requirements
 
