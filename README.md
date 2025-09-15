@@ -1,66 +1,40 @@
-# esphome-seplos-bms
+# esphome-pace-bms
 
-ESPHome component to monitor a Seplos BMS via UART, RS485 or BLE
+ESPHome component to monitor a Pace BMS via UART or RS485
 
 ## Supported devices
 
-* 1101-SP05 (reported by [@JacquesdeBruyn](https://github.com/syssi/esphome-seplos-bms/issues/37))
-* 1101-SP15 (reported by [@NosIreland](https://github.com/syssi/esphome-seplos-bms/issues/1))
-* 1101-SP16 (reported by [@atze09](https://github.com/syssi/esphome-seplos-bms/issues/28))
-* 1101-ZH26 (reported by [@faizan-elite](https://github.com/syssi/esphome-seplos-bms/issues/2))
-* 1101-MZ02 (reported by [@fajera81](https://github.com/syssi/esphome-seplos-bms/discussions/33))
-* 1101-SP76 (reported by [@bagges](https://github.com/syssi/esphome-seplos-bms/issues/46))
-* 1101-SP101, PUSUNG-135 (reported by [@manznOnly](https://github.com/syssi/esphome-seplos-bms/discussions/50#discussioncomment-5630209))
-* 1101-10E-SP76-16S (reported by [@tobox](https://github.com/syssi/esphome-seplos-bms/discussions/42))
-* 1101-10E-JK06-16S (Apex 48200, Apex BMS 48V200A, reported by [@Pho3niX90](https://github.com/syssi/esphome-seplos-bms/issues/74))
-* Boqiang BMS007-LD43-16S-HW (reported by [@xdilian](https://github.com/syssi/esphome-seplos-bms/discussions/43)) requires custom settings
+* DEYE (from VTAC -> VT-12040 200Ah 51.2V battery - PACE BMS)
+* POWMR (POW-LIO48200-16S)
   ```
-  protocol_version: 0x26
+  protocol_version: 0x25
   override_pack: 1
   ```
-* Boqiang BMS001-HS01-15S (reported by [@xdilian](https://github.com/syssi/esphome-seplos-bms/discussions/43)) requires custom settings
-  ```
-  protocol_version: 0x26
-  override_pack: 1
-  override_cell_count: 10
-  ```
-* Seplos BMS V3.0 Type C, B-48200-C (BMS16S200A-SP05B, FW 1.3, [@Goaheadz](https://github.com/syssi/esphome-seplos-bms/discussions/98)) using [esp8266-seplos-v3-example.yaml](esp32-seplos-v3-example.yaml)
 
 ## Untested devices
 
-* EMU10xx
-* 11XX Series
+* Any other PACE BMS with 2.5 protocol version
 
 ## Schematics
 
 ```
-                  RS485                      UART
+                  RS232                      UART
 ┌────────────┐              ┌──────────┐                ┌─────────┐
 │            │              │          │<----- RX ----->│         │
-│   Seplos   │<-----B- ---->│  RS485   │<----- TX ----->│ ESP32/  │
-│    BMS     │<---- A+ ---->│  to TTL  │<----- GND ---->│ ESP8266 │
+│    Deye    │<-----rx ---->│  RS232   │<----- TX ----->│ ESP32/  │
+│    BMS     │<---- tx ---->│  to TTL  │<----- GND ---->│ ESP8266 │
 │            │<--- GND ---->│  module  │<----- 3.3V --->│         │<-- VCC
 │            │              │          │                │         │<-- GND
 └────────────┘              └──────────┘                └─────────┘
 
 ```
 
-Please make sure to power the RS485 module with 3.3V because it affects the TTL (transistor-transistor logic) voltage between RS485 module and ESP.
+Please be aware of the different RJ11 pinout
 
-### RJ45 jack
-
-|  Pin  | Purpose | RS485-to-TTL pin | Color T-568B |
-|:-----:|:--------|:-----------------|--------------|
-| **1** | **B-**  | **B-**           | Orange-White |
-| **2** | **A+**  | **A+**           | Orange       |
-| **3** | **GND** | **GND**          | Green-White  |
-|   4   | NC      |                  |              |
-|   5   | NC      |                  |              |
-|   6   | GND     |                  |              |
-|   7   | A+      |                  |              |
-|   8   | B-      |                  |              |
-
-Please be aware of the different RJ45 pinout colors ([T-568A vs. T-568B](images/rj45-colors-t568a-vs-t568.png)).
+Also consider that if you're using the VTAC from Deye, they should have given you a wifi module.
+That specific module can be reprogrammed and used with my software, upon opening it there are the pinout
+to rewrite firmware, it should use a ESP32-S device, that will be inserted into the ESI port of the
+deye inverter.
 
 ## Requirements
 
@@ -72,7 +46,7 @@ Please be aware of the different RJ45 pinout colors ([T-568A vs. T-568B](images/
 You can install this component with [ESPHome external components feature](https://esphome.io/components/external_components.html) like this:
 ```yaml
 external_components:
-  - source: github://syssi/esphome-seplos-bms@main
+  - source: github://SaschaKP/esphome-pace-bms@main
 ```
 
 or just use the `esp32-example.yaml` as proof of concept:
@@ -82,8 +56,8 @@ or just use the `esp32-example.yaml` as proof of concept:
 pip3 install esphome
 
 # Clone this external component
-git clone https://github.com/syssi/esphome-seplos-bms.git
-cd esphome-seplos-bms
+git clone https://github.com/SaschaKP/esphome-pace-bms.git
+cd esphome-pace-bms
 
 # Create a secrets.yaml containing some setup specific secrets
 cat > secrets.yaml <<EOF
@@ -100,52 +74,90 @@ EOF
 esphome run esp32-example.yaml
 ```
 
-![Screen recording](install.gif)
-
 ## Example response all sensors enabled
 
 ```
-[I][seplos_bms:031]: Telemetry frame received
-[D][sensor:124]: 'seplos-bms cell voltage 1': Sending state 3.28800 V with 3 decimals of accuracy
-[D][sensor:124]: 'seplos-bms cell voltage 2': Sending state 3.30400 V with 3 decimals of accuracy
-[D][sensor:124]: 'seplos-bms cell voltage 3': Sending state 3.31600 V with 3 decimals of accuracy
-[D][sensor:124]: 'seplos-bms cell voltage 4': Sending state 3.28700 V with 3 decimals of accuracy
-[D][sensor:124]: 'seplos-bms cell voltage 5': Sending state 3.31000 V with 3 decimals of accuracy
-[D][sensor:124]: 'seplos-bms cell voltage 6': Sending state 3.30100 V with 3 decimals of accuracy
-[D][sensor:124]: 'seplos-bms cell voltage 7': Sending state 3.29700 V with 3 decimals of accuracy
-[D][sensor:124]: 'seplos-bms cell voltage 8': Sending state 3.29300 V with 3 decimals of accuracy
-[D][sensor:124]: 'seplos-bms cell voltage 9': Sending state 3.30500 V with 3 decimals of accuracy
-[D][sensor:124]: 'seplos-bms cell voltage 10': Sending state 3.31200 V with 3 decimals of accuracy
-[D][sensor:124]: 'seplos-bms cell voltage 11': Sending state 3.30400 V with 3 decimals of accuracy
-[D][sensor:124]: 'seplos-bms cell voltage 12': Sending state 3.31100 V with 3 decimals of accuracy
-[D][sensor:124]: 'seplos-bms cell voltage 13': Sending state 3.30700 V with 3 decimals of accuracy
-[D][sensor:124]: 'seplos-bms cell voltage 14': Sending state 3.29000 V with 3 decimals of accuracy
-[D][sensor:124]: 'seplos-bms cell voltage 15': Sending state 3.29400 V with 3 decimals of accuracy
-[D][sensor:124]: 'seplos-bms cell voltage 16': Sending state 3.28900 V with 3 decimals of accuracy
-[D][sensor:124]: 'seplos-bms min cell voltage': Sending state 3.28700 V with 3 decimals of accuracy
-[D][sensor:124]: 'seplos-bms max cell voltage': Sending state 3.31600 V with 3 decimals of accuracy
-[D][sensor:124]: 'seplos-bms max voltage cell': Sending state 3.00000  with 0 decimals of accuracy
-[D][sensor:124]: 'seplos-bms min voltage cell': Sending state 4.00000  with 0 decimals of accuracy
-[D][sensor:124]: 'seplos-bms delta cell voltage': Sending state 0.02900 V with 3 decimals of accuracy
-[D][sensor:124]: 'seplos-bms average cell voltage': Sending state 3.30050 V with 3 decimals of accuracy
-[D][sensor:124]: 'seplos-bms temperature 1': Sending state 29.82000 °C with 0 decimals of accuracy
-[D][sensor:124]: 'seplos-bms temperature 2': Sending state 29.76000 °C with 0 decimals of accuracy
-[D][sensor:124]: 'seplos-bms temperature 3': Sending state 29.67000 °C with 0 decimals of accuracy
-[D][sensor:124]: 'seplos-bms temperature 4': Sending state 29.82000 °C with 0 decimals of accuracy
-[D][sensor:124]: 'seplos-bms environment temperature': Sending state 29.81000 °C with 0 decimals of accuracy
-[D][sensor:124]: 'seplos-bms mosfet temperature': Sending state 29.78000 °C with 0 decimals of accuracy
-[D][sensor:124]: 'seplos-bms current': Sending state -6.54000 A with 2 decimals of accuracy
-[D][sensor:124]: 'seplos-bms total voltage': Sending state 52.80000 V with 2 decimals of accuracy
-[D][sensor:124]: 'seplos-bms power': Sending state -345.31198 W with 2 decimals of accuracy
-[D][sensor:124]: 'seplos-bms charging power': Sending state 0.00000 W with 2 decimals of accuracy
-[D][sensor:124]: 'seplos-bms discharging power': Sending state 345.31198 W with 2 decimals of accuracy
-[D][sensor:124]: 'seplos-bms residual capacity': Sending state 133.86000 Ah with 2 decimals of accuracy
-[D][sensor:124]: 'seplos-bms battery capacity': Sending state 170.00000 Ah with 2 decimals of accuracy
-[D][sensor:124]: 'seplos-bms state of charge': Sending state 78.70000 % with 1 decimals of accuracy
-[D][sensor:124]: 'seplos-bms rated capacity': Sending state 180.00000 Ah with 2 decimals of accuracy
-[D][sensor:124]: 'seplos-bms charging cycles': Sending state 70.00000  with 0 decimals of accuracy
-[D][sensor:124]: 'seplos-bms state of health': Sending state 100.00000 % with 1 decimals of accuracy
-[D][sensor:124]: 'seplos-bms port voltage': Sending state 52.79000 V with 2 decimals of accuracy
+[21:27:56][I][pace_bms:034]: Telemetry frame (68 bytes) received
+[21:27:56][D][sensor:103]: 'Bank 1 cell voltage 1': Sending state 3.31800 V with 3 decimals of accuracy
+[21:27:56][D][sensor:103]: 'Bank 1 cell voltage 2': Sending state 3.32000 V with 3 decimals of accuracy
+[21:27:56][D][sensor:103]: 'Bank 1 cell voltage 3': Sending state 3.31900 V with 3 decimals of accuracy
+[21:27:56][D][sensor:103]: 'Bank 1 cell voltage 4': Sending state 3.31900 V with 3 decimals of accuracy
+[21:27:56][D][sensor:103]: 'Bank 1 cell voltage 5': Sending state 3.31900 V with 3 decimals of accuracy
+[21:27:56][D][sensor:103]: 'Bank 1 cell voltage 6': Sending state 3.31900 V with 3 decimals of accuracy
+[21:27:56][D][sensor:103]: 'Bank 1 cell voltage 7': Sending state 3.31900 V with 3 decimals of accuracy
+[21:27:57][D][sensor:103]: 'Bank 1 cell voltage 8': Sending state 3.31800 V with 3 decimals of accuracy
+[21:27:57][D][sensor:103]: 'Bank 1 cell voltage 9': Sending state 3.31800 V with 3 decimals of accuracy
+[21:27:57][D][sensor:103]: 'Bank 1 cell voltage 10': Sending state 3.31900 V with 3 decimals of accuracy
+[21:27:57][D][sensor:103]: 'Bank 1 cell voltage 11': Sending state 3.31900 V with 3 decimals of accuracy
+[21:27:57][D][sensor:103]: 'Bank 1 cell voltage 12': Sending state 3.31800 V with 3 decimals of accuracy
+[21:27:57][D][sensor:103]: 'Bank 1 cell voltage 13': Sending state 3.32000 V with 3 decimals of accuracy
+[21:27:57][D][sensor:103]: 'Bank 1 cell voltage 14': Sending state 3.31900 V with 3 decimals of accuracy
+[21:27:57][D][sensor:103]: 'Bank 1 cell voltage 15': Sending state 3.31900 V with 3 decimals of accuracy
+[21:27:57][D][sensor:103]: 'Bank 1 cell voltage 16': Sending state 3.31900 V with 3 decimals of accuracy
+[21:27:57][D][sensor:103]: 'Bank 1 min cell voltage': Sending state 3.31800 V with 3 decimals of accuracy
+[21:27:57][D][sensor:103]: 'Bank 1 max cell voltage': Sending state 3.32000 V with 3 decimals of accuracy
+[21:27:57][D][sensor:103]: 'Bank 1 max voltage cell': Sending state 2.00000  with 0 decimals of accuracy
+[21:27:57][D][sensor:103]: 'Bank 1 min voltage cell': Sending state 1.00000  with 0 decimals of accuracy
+[21:27:57][D][sensor:103]: 'Bank 1 delta cell voltage': Sending state 0.00200 V with 3 decimals of accuracy
+[21:27:57][D][sensor:103]: 'Bank 1 average cell voltage': Sending state 3.31888 V with 3 decimals of accuracy
+[21:27:57][D][sensor:103]: 'Bank 1 temperature 1': Sending state 29.20000 °C with 0 decimals of accuracy
+[21:27:57][D][sensor:103]: 'Bank 1 temperature 2': Sending state 27.70000 °C with 0 decimals of accuracy
+[21:27:57][D][sensor:103]: 'Bank 1 temperature 3': Sending state 29.20000 °C with 0 decimals of accuracy
+[21:27:57][D][sensor:103]: 'Bank 1 temperature 4': Sending state 27.80000 °C with 0 decimals of accuracy
+[21:27:57][D][sensor:103]: 'Bank 1 mosfet temperature': Sending state 29.40000 °C with 0 decimals of accuracy
+[21:27:57][D][sensor:103]: 'Bank 1 environment temperature': Sending state 29.20000 °C with 0 decimals of accuracy
+[21:27:57][D][sensor:103]: 'Bank 1 current': Sending state -7.13000 A with 2 decimals of accuracy
+[21:27:57][D][sensor:103]: 'Bank 1 total voltage': Sending state 53.10200 V with 2 decimals of accuracy
+[21:27:57][D][sensor:103]: 'Bank 1 power': Sending state -378.61725 W with 2 decimals of accuracy
+[21:27:57][D][sensor:103]: 'Bank 1 charging power': Sending state 0.00000 W with 2 decimals of accuracy
+[21:27:57][D][sensor:103]: 'Bank 1 discharging power': Sending state 378.61725 W with 2 decimals of accuracy
+[21:27:57][D][sensor:103]: 'Bank 1 residual capacity': Sending state 180.75999 Ah with 2 decimals of accuracy
+[21:27:57][D][sensor:103]: 'Bank 1 battery capacity': Sending state 199.84000 Ah with 2 decimals of accuracy
+[21:27:57][D][sensor:103]: 'Bank 1 charging cycles': Sending state 194.00000  with 0 decimals of accuracy
+[21:27:57][D][sensor:103]: 'Bank 1 rated capacity': Sending state 200.00000 Ah with 2 decimals of accuracy
+[21:27:57][D][sensor:103]: 'Bank 1 state of charge': Sending state 90.45236 % with 1 decimals of accuracy
+[21:27:57][D][sensor:103]: 'Bank 1 state of health': Sending state 99.92000 % with 1 decimals of accuracy
+
+[21:28:01][I][pace_bms:034]: Telemetry frame (68 bytes) received
+[21:28:01][D][sensor:103]: 'Bank 2 cell voltage 1': Sending state 3.31600 V with 3 decimals of accuracy
+[21:28:01][D][sensor:103]: 'Bank 2 cell voltage 2': Sending state 3.31800 V with 3 decimals of accuracy
+[21:28:01][D][sensor:103]: 'Bank 2 cell voltage 3': Sending state 3.31800 V with 3 decimals of accuracy
+[21:28:01][D][sensor:103]: 'Bank 2 cell voltage 4': Sending state 3.31800 V with 3 decimals of accuracy
+[21:28:01][D][sensor:103]: 'Bank 2 cell voltage 5': Sending state 3.31800 V with 3 decimals of accuracy
+[21:28:01][D][sensor:103]: 'Bank 2 cell voltage 6': Sending state 3.31800 V with 3 decimals of accuracy
+[21:28:01][D][sensor:103]: 'Bank 2 cell voltage 7': Sending state 3.31800 V with 3 decimals of accuracy
+[21:28:01][D][sensor:103]: 'Bank 2 cell voltage 8': Sending state 3.31800 V with 3 decimals of accuracy
+[21:28:01][D][sensor:103]: 'Bank 2 cell voltage 9': Sending state 3.31800 V with 3 decimals of accuracy
+[21:28:01][D][sensor:103]: 'Bank 2 cell voltage 10': Sending state 3.31800 V with 3 decimals of accuracy
+[21:28:01][D][sensor:103]: 'Bank 2 cell voltage 11': Sending state 3.31800 V with 3 decimals of accuracy
+[21:28:01][D][sensor:103]: 'Bank 2 cell voltage 12': Sending state 3.31800 V with 3 decimals of accuracy
+[21:28:01][D][sensor:103]: 'Bank 2 cell voltage 13': Sending state 3.31800 V with 3 decimals of accuracy
+[21:28:01][D][sensor:103]: 'Bank 2 cell voltage 14': Sending state 3.31800 V with 3 decimals of accuracy
+[21:28:01][D][sensor:103]: 'Bank 2 cell voltage 15': Sending state 3.31800 V with 3 decimals of accuracy
+[21:28:01][D][sensor:103]: 'Bank 2 cell voltage 16': Sending state 3.31600 V with 3 decimals of accuracy
+[21:28:01][D][sensor:103]: 'Bank 2 min cell voltage': Sending state 3.31600 V with 3 decimals of accuracy
+[21:28:01][D][sensor:103]: 'Bank 2 max cell voltage': Sending state 3.31800 V with 3 decimals of accuracy
+[21:28:01][D][sensor:103]: 'Bank 2 max voltage cell': Sending state 2.00000  with 0 decimals of accuracy
+[21:28:01][D][sensor:103]: 'Bank 2 min voltage cell': Sending state 1.00000  with 0 decimals of accuracy
+[21:28:01][D][sensor:103]: 'Bank 2 delta cell voltage': Sending state 0.00200 V with 3 decimals of accuracy
+[21:28:01][D][sensor:103]: 'Bank 2 average cell voltage': Sending state 3.31775 V with 3 decimals of accuracy
+[21:28:01][D][sensor:103]: 'Bank 2 temperature 1': Sending state 27.70000 °C with 0 decimals of accuracy
+[21:28:01][D][sensor:103]: 'Bank 2 temperature 2': Sending state 28.40000 °C with 0 decimals of accuracy
+[21:28:01][D][sensor:103]: 'Bank 2 temperature 3': Sending state 28.70000 °C with 0 decimals of accuracy
+[21:28:01][D][sensor:103]: 'Bank 2 temperature 4': Sending state 28.70000 °C with 0 decimals of accuracy
+[21:28:01][D][sensor:103]: 'Bank 2 mosfet temperature': Sending state 25.10000 °C with 0 decimals of accuracy
+[21:28:01][D][sensor:103]: 'Bank 2 environment temperature': Sending state 26.90000 °C with 0 decimals of accuracy
+[21:28:01][D][sensor:103]: 'Bank 2 current': Sending state -5.18000 A with 2 decimals of accuracy
+[21:28:01][D][sensor:103]: 'Bank 2 total voltage': Sending state 53.17400 V with 2 decimals of accuracy
+[21:28:01][D][sensor:103]: 'Bank 2 power': Sending state -275.44131 W with 2 decimals of accuracy
+[21:28:01][D][sensor:103]: 'Bank 2 charging power': Sending state 0.00000 W with 2 decimals of accuracy
+[21:28:01][D][sensor:103]: 'Bank 2 discharging power': Sending state 275.44131 W with 2 decimals of accuracy
+[21:28:01][D][sensor:103]: 'Bank 2 residual capacity': Sending state 187.89999 Ah with 2 decimals of accuracy
+[21:28:01][D][sensor:103]: 'Bank 2 battery capacity': Sending state 207.00000 Ah with 2 decimals of accuracy
+[21:28:01][D][sensor:103]: 'Bank 2 charging cycles': Sending state 8.00000  with 0 decimals of accuracy
+[21:28:01][D][sensor:103]: 'Bank 2 rated capacity': Sending state 200.00000 Ah with 2 decimals of accuracy
+[21:28:01][D][sensor:103]: 'Bank 2 state of charge': Sending state 90.77294 % with 1 decimals of accuracy
+[21:28:01][D][sensor:103]: 'Bank 2 state of health': Sending state 100.00000 % with 1 decimals of accuracy
 ```
 
 ## Known issues and limitations
@@ -154,35 +166,17 @@ None.
 
 ## Protocol
 
-See [SEPLOS BMS Communication Protocol_V2.0.pdf](docs/SEPLOS%20BMS%20Communication%20Protocol_V2.0.pdf) and [Seplos 48v 100A BMS RS485 Protocol.pdf](docs/Seplos%2048v%20100A%20BMS%20RS485%20Protocol.pdf).
+PACE RS232 protocol is really a mess, but anyway you can find sufficient code and docs in: https://github.com/nkinnan/esphome-pace-bms from whom I read and understood some code, and
+also from inspecting the code with a c# decompiler with tools like Jetbrain_dotpeek, with whom I read the specific parts necessary to retrieve correctly the data from my BMSs
 
 ```
 $ echo -ne "~20004642E00200FD37\r" | hexdump -ve '1/1 "%.2X."'
       7E.32.30.30.30.34.36.34.32.45.30.30.32.30.30.46.44.33.37.0D.
 
-# Get pack #0 telemetry data (CID2 `0x42`)
-TX -> "~20004642E00200FD37\r"
-RX <- "~2000460010960001100CD70CE90CF40CD60CEF0CE50CE10CDC0CE90CF00CE80CEF0CEA0CDA0CDE0CD8060BA60BA00B970BA60BA50BA2FD5C14A0344E0A426803134650004603E8149F0000000000000000DC6C\r"
+# Get pack #1 telemetry data (CID2 `0x42` - from SaschaKP git)
+TX -> "~25014642E00201FD30\r"
+RX <- "~25014600F07A0001100CC70CC80CC70CC70CC70CC50CC60CC70CC70CC60CC70CC60CC60CC70CC60CC7060B9B0B990B990B990BB30BBCFF1FCCCD12D303286A008C2710E1E4\r"
 
-# Get system parameters (CID2 `0x47`)
-TX -> "~200046470000FDA9\r"
-RX <- ?
-
-# Get protocol version (CID2 `0x4F`)
-TX -> "~2000464F0000FD9A\r"
-RX <- ?
-
-# Get manufacturer info (CID2 `0x51`)
-TX -> "~200046510000FDAE\r"
-RX <- "~20004600C040313130312D5350313520020743414E50726F746F636F6C3A536F666172202020F046\r"
-
-# Get management info (pylontech only?)
-TX -> "~200046920000FDA9\r"
-RX <- ?
-
-# Get module serial number (pylontech only?)
-TX -> "~200046930000FDA8\r"
-RX <- ?
 ```
 
 ## Debugging
@@ -191,14 +185,14 @@ If this component doesn't work out of the box for your device please update your
 
 ```
 logger:
-  level: DEBUG
+  level: VERY_VERBOSE
 
 uart:
   id: uart_0
   baud_rate: 9600
   tx_pin: ${tx_pin}
   rx_pin: ${rx_pin}
-  rx_buffer_size: 384
+  rx_buffer_size: 1024
   debug:
     dummy_receiver: false
     direction: BOTH
@@ -210,8 +204,4 @@ uart:
 
 ## References
 
-* https://github.com/Frankkkkk/python-pylontech/blob/master/pylontech/pylontech.py
-* https://diysolarforum.com/threads/simple-seplos-bms-protocol-decode-bash-script.34993/
-* https://github.com/celsworth/lxp-pylon-utils/tree/master/lib/pylon/packet
-* https://github.com/meteosat007/solar-pylontech
-* https://github.com/BrucePerens/seplos_c
+* https://github.com/nkinnan/esphome-pace-bms

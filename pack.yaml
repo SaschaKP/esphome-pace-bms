@@ -1,0 +1,81 @@
+sensor:
+  - platform: pace_bms
+    pace_bms_id: ${pace_bms_id}
+    min_cell_voltage:
+      name: "${pack} min cell voltage"
+    max_cell_voltage:
+      name: "${pack} max cell voltage"
+    min_voltage_cell:
+      name: "${pack} min voltage cell"
+    max_voltage_cell:
+      name: "${pack} max voltage cell"
+    delta_cell_voltage:
+      name: "${pack} delta cell voltage"
+    average_cell_voltage:
+      name: "${pack} average cell voltage"
+    cell_voltage_1:
+      name: "${pack} cell voltage 1"
+    cell_voltage_2:
+      name: "${pack} cell voltage 2"
+    cell_voltage_3:
+      name: "${pack} cell voltage 3"
+    cell_voltage_4:
+      name: "${pack} cell voltage 4"
+    cell_voltage_5:
+      name: "${pack} cell voltage 5"
+    cell_voltage_6:
+      name: "${pack} cell voltage 6"
+    cell_voltage_7:
+      name: "${pack} cell voltage 7"
+    cell_voltage_8:
+      name: "${pack} cell voltage 8"
+    cell_voltage_9:
+      name: "${pack} cell voltage 9"
+    cell_voltage_10:
+      name: "${pack} cell voltage 10"
+    cell_voltage_11:
+      name: "${pack} cell voltage 11"
+    cell_voltage_12:
+      name: "${pack} cell voltage 12"
+    cell_voltage_13:
+      name: "${pack} cell voltage 13"
+    cell_voltage_14:
+      name: "${pack} cell voltage 14"
+    cell_voltage_15:
+      name: "${pack} cell voltage 15"
+    cell_voltage_16:
+      name: "${pack} cell voltage 16"
+    temperature_1:
+      name: "${pack} temperature 1"
+    temperature_2:
+      name: "${pack} temperature 2"
+    temperature_3:
+      name: "${pack} temperature 3"
+    temperature_4:
+      name: "${pack} temperature 4"
+    temperature_5:
+      name: "${pack} mosfet temperature"
+    temperature_6:
+      name: "${pack} environment temperature"
+    total_voltage:
+      name: "${pack} total voltage"
+    current:
+      name: "${pack} current"
+    power:
+      name: "${pack} power"
+    charging_power:
+      name: "${pack} charging power"
+    discharging_power:
+      name: "${pack} discharging power"
+    residual_capacity:
+      name: "${pack} residual capacity"
+    battery_capacity:
+      name: "${pack} battery capacity"
+    rated_capacity:
+      name: "${pack} rated capacity"
+    state_of_charge:
+      name: "${pack} state of charge"
+    charging_cycles:
+      name: "${pack} charging cycles"
+    state_of_health:
+      name: "${pack} state of health"
