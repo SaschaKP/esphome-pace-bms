@@ -169,9 +169,6 @@ None.
 PACE RS232 protocol is really a mess, but anyway you can find sufficient code and docs in: https://github.com/nkinnan/esphome-pace-bms from whom I read and understood some code, and also from inspecting the code of pbmstool with a c# decompiler with tools like Jetbrain_dotpeek, with whom I read the specific parts necessary to retrieve correctly the data from my BMSs
 
 ```
-$ echo -ne "~20004642E00200FD37\r" | hexdump -ve '1/1 "%.2X."'
-      7E.32.30.30.30.34.36.34.32.45.30.30.32.30.30.46.44.33.37.0D.
-
 # Get pack #1 telemetry data (CID2 `0x42` - from nkinnan git)
 TX -> "~25014642E00201FD30\r"
 RX <- "~25014600F07A0001100CC70CC80CC70CC70CC70CC50CC60CC70CC70CC60CC70CC60CC60CC70CC60CC7060B9B0B990B990B990BB30BBCFF1FCCCD12D303286A008C2710E1E4\r"
