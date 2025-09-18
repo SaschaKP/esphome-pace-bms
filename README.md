@@ -8,7 +8,6 @@ ESPHome component to monitor a Pace BMS via UART or RS485
 * POWMR (POW-LIO48200-16S)
   ```
   protocol_version: 0x25
-  override_pack: 1
   ```
 
 ## Untested devices
