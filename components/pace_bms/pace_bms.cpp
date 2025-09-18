@@ -7,18 +7,19 @@ namespace pace_bms {
 
 static const char *const TAG = "pace_bms";
 
-static const uint8_t MAX_NO_RESPONSE_COUNT = 5;
+static const uint8_t MAX_NO_RESPONSE_COUNT = 12;//roughly 1 minute at 5 seconds update time
 
 void PaceBms::on_pace_modbus_data(const std::vector<uint8_t> &data) {
   this->reset_online_status_tracker_();
 
-  // num_of_cells   frame_size   data_len
-  // 8              65           118 (0x76)   guessed
-  // 14             77           142 (0x8E)
-  // 15             79           146 (0x92)
-  // 16             81           150 (0x96)
   if (data.size() >= 44 && data[8] >= 8 && data[8] <= 16) {
-    this->on_telemetry_data_(data);
+    uint8_t guess = 9 + data[8] * 2 + 7; // 9 header + cell count * 2 + tail bytes of the rest
+    if (data.size() - guess > 13) {  // we have telemetry data - this is merely a guess but status is way more short
+      this->on_telemetry_data_(data);
+    } else { // we have status data
+      //TODO: read status data
+    }
+
     return;
   }
 
@@ -35,29 +36,28 @@ void PaceBms::on_telemetry_data_(const std::vector<uint8_t> &data) {
   ESP_LOGVV(TAG, "  %s", format_hex_pretty(&data.front(), data.size()).c_str());
 
   // ->
-  // 0x2000460010960001100CD70CE90CF40CD60CEF0CE50CE10CDC0CE90CF00CE80CEF0CEA0CDA0CDE0CD8060BA60BA00B970BA60BA50BA2FD5C14A0344E0A426803134650004603E8149F0000000000000000
-  // 0x26004600307600011000000000000000000000000000000000000000000000000000000000000000000608530853085308530BAC0B9000000000002D0213880001E6B8
+  // 0x25014600F07A0001100CC70CC80CC70CC70CC70CC50CC60CC70CC70CC60CC70CC60CC60CC70CC60CC7060B9B0B990B990B990BB30BBCFF1FCCCD12D303286A008C2710E1E4
   //
   // *Data*
   //
   // Byte   Address Content: Description                      Decoded content               Coeff./Unit
-  //   0    0x20             Protocol version      VER        2.0
-  //   1    0x00             Device address        ADR
+  //   0    0x25             Protocol version      VER        2.0
+  //   1    0x01             Device address        ADR        Address of the battery that sends the data (usually CAN/485A or RS232)
   //   2    0x46             Device type           CID1       Lithium iron phosphate battery BMS
   //   3    0x00             Function code         CID2       0x00: Normal, 0x01 VER error, 0x02 Chksum error, ...
-  //   4    0x10             Data length checksum  LCHKSUM
-  //   5    0x96             Data length           LENID      150 / 2 = 75
-  //   6      0x00           Data flag
-  //   7      0x01           Command group
-  ESP_LOGV(TAG, "Command group: %d", data[7]);
-  //   8      0x10           Number of cells                  16
+  //   4    0xF0             Data length checksum  LCHKSUM
+  //   5    0x7A             Data length           LENID      122 / 2 = 61
+  //   6    0x00             Data flag
+  //   7    0x01             Responding Address               address of the responding battery (485B/A - RS232 *ONLY*)
+  ESP_LOGV(TAG, "Responding Address: %d", data[7]);
+  //   8    0x10             Number of cells                  16
   uint8_t cells = (this->override_cell_count_) ? this->override_cell_count_ : data[8];
 
   ESP_LOGV(TAG, "Number of cells: %d", cells);
-  //   9      0x0C 0xD7      Cell voltage 1                   3287 * 0.001f = 3.287         V
-  //   11     0x0C 0xE9      Cell voltage 2                   3305 * 0.001f = 3.305         V
+  //   9      0x0C 0xC7      Cell voltage 1                   3287 * 0.001f = 3.271         V
+  //   11     0x0C 0xC8      Cell voltage 2                   3305 * 0.001f = 3.272         V
   //   ...    ...            ...
-  //   39     0x0C 0xD8      Cell voltage 16                                                V
+  //   39     0x0C 0xC7      Cell voltage 16                                                V
   float min_cell_voltage = 100.0f;
   float max_cell_voltage = -100.0f;
   float average_cell_voltage = 0.0f;
@@ -91,23 +91,23 @@ void PaceBms::on_telemetry_data_(const std::vector<uint8_t> &data) {
   uint8_t temperature_sensors = data[offset];
   ESP_LOGV(TAG, "Number of temperature sensors: %d", temperature_sensors);
 
-  //   42     0x0B 0xA6      Temperature sensor 1             (2982 - 2731) * 0.1f = 25.1          °C
-  //   44     0x0B 0xA0      Temperature sensor 2             (2976 - 2731) * 0.1f = 24.5          °C
-  //   46     0x0B 0x97      Temperature sensor 3             (2967 - 2731) * 0.1f = 23.6          °C
-  //   48     0x0B 0xA6      Temperature sensor 4             (2982 - 2731) * 0.1f = 25.1          °C
-  //   50     0x0B 0xA5      Environment temperature          (2981 - 2731) * 0.1f = 25.0          °C
-  //   52     0x0B 0xA2      Mosfet temperature               (2978 - 2731) * 0.1f = 24.7          °C
+  //   42     0x0B 0x9B      Temperature sensor 1             (2971 - 2731) * 0.1f = 24.0          °C
+  //   44     0x0B 0x99      Temperature sensor 2             (2969 - 2731) * 0.1f = 23.8          °C
+  //   46     0x0B 0x99      Temperature sensor 3             (2969 - 2731) * 0.1f = 23.8          °C
+  //   48     0x0B 0x99      Temperature sensor 4             (2969 - 2731) * 0.1f = 23.8          °C
+  //   50     0x0B 0xB3      Environment temperature          (2995 - 2731) * 0.1f = 26.4          °C
+  //   52     0x0B 0xBC      Mosfet temperature               (3004 - 2731) * 0.1f = 27.3          °C
   for (uint8_t i = 0; i < std::min((uint8_t) 6, temperature_sensors); i++) {
     float raw_temperature = (float) pace_get_16bit(offset + 1 + (i * 2));
     this->publish_state_(this->temperatures_[i].temperature_sensor_, (raw_temperature - 2731.0f) * 0.1f);
   }
   offset = offset + 1 + (temperature_sensors * 2);
 
-  //   54     0xFD 0x5C      Charge/discharge current         signed int?                   A
+  //   54     0xC7 0x0C      Charge/discharge current         signed int?                   A
   float current = (float) ((int16_t) pace_get_16bit(offset)) * 0.01f;
   this->publish_state_(this->current_sensor_, current);
 
-  //   56     0x14 0xA0      Total battery voltage            5280 * 0.01f = 52.80          V
+  //   56     0xC6 0x0C      Total battery voltage            50700 * 0.001f = 50.70          V
   float total_voltage = (float) pace_get_16bit(offset + 2) * 0.001f;
   this->publish_state_(this->total_voltage_sensor_, total_voltage);
 
@@ -116,19 +116,19 @@ void PaceBms::on_telemetry_data_(const std::vector<uint8_t> &data) {
   this->publish_state_(this->charging_power_sensor_, std::max(0.0f, power));               // 500W vs 0W -> 500W
   this->publish_state_(this->discharging_power_sensor_, std::abs(std::min(0.0f, power)));  // -500W vs 0W -> 500W
 
-  //   58     0x34 0x4E      Residual capacity                13390 * 0.01f = 133.90        Ah
+  //   58     0x12 0xD3      Residual capacity                4819 * 0.01f = 48.19        Ah
   float remaining_capacity = (float) pace_get_16bit(offset + 4) * 0.01f;
   this->publish_state_(this->residual_capacity_sensor_, remaining_capacity);
 
-  //   60     0x0A           Custom number                    10
-  //   61     0x42 0x68      Battery capacity                 17000 * 0.01f = 170.00        Ah
+  //   60     0x03           Custom number                    03
+  //   61     0x28 0x6A      Battery capacity                 10346 * 0.01f = 103.46        Ah
   float full_capacity = (float) pace_get_16bit(offset + 7) * 0.01f;
   this->publish_state_(this->battery_capacity_sensor_, full_capacity);
 
-  //   63     0x00 0x46      Number of cycles                 70
+  //   63     0x00 0x8C      Number of cycles                 140
   this->publish_state_(this->charging_cycles_sensor_, (float) pace_get_16bit(offset + 9));
   
-  //   65     0x46 0x50      Rated capacity                   18000 * 0.01f = 180.00        Ah
+  //   65     0x27 0x10      Rated capacity                   10000 * 0.01f = 100.00        Ah
   float rated_capacity = (float) pace_get_16bit(offset + 11) * 0.01f;
   this->publish_state_(this->rated_capacity_sensor_, rated_capacity);
 
@@ -136,6 +136,43 @@ void PaceBms::on_telemetry_data_(const std::vector<uint8_t> &data) {
   this->publish_state_(this->state_of_charge_sensor_, (remaining_capacity / full_capacity) * 100.0f);
   this->publish_state_(this->state_of_health_sensor_, std::min(100.0f, (full_capacity / rated_capacity) * 100.0f));
 
+}
+
+// ==== Status Information
+// 0 Responding Bus Id
+// 1 Cell Count (this example has 16 cells)
+// 2 Cell Warning (repeated Cell Count times) see: DecodeWarningValue / enum WarningValue
+// 3 Temperature Count (this example has 6 temperatures)
+// 4 Temperature Warning (repeated Temperature Count times) see: DecodeWarningValue / enum WarningValue
+// 5 Charge Current Warning see: DecodeWarningValue / enum WarningValue
+// 6 Total Voltage Warning see: DecodeWarningValue / enum WarningValue
+// 7 Discharge Current Warning see: DecodeWarningValue / enum WarningValue
+// 8 Protection Status 1 see: DecodeProtectionStatus1Value / enum ProtectionStatus1Flags
+// 9 Protection Status 2 see: DecodeProtectionStatus2Value / enum ProtectionStatus2Flags
+// 0 System Status see: DecodeSystemStatusValue
+// 1 Configuration Status see: DecodeConfigurationStatusValue
+// 2 Fault Status see: DecodeFaultStatusValue
+// 3 Balance Status (high byte) set bits indicate those cells are balancing
+// 4 Balance Status (low byte) set bits indicate those cells are balancing
+// 5 Warning Status 1 see: DecodeWarningStatus1Value
+// 6 Warning Status 2 see: DecodeWarningStatus2Value
+// req:   ~25014644E00201FD2E.
+// resp:  ~25014600004C000110000000000000000000000000000000000600000000000000000000000E000000000000EF3A.
+//                       00112222222222222222222222222222222233444444444444556677889900112233445566
+
+void PaceBms::on_status_data_(const std::vector<uint8_t>& data) {
+  auto pace_get_16bit = [&](size_t i) -> uint16_t {
+    return (uint16_t(data[i + 0]) << 8) | (uint16_t(data[i + 1]) << 0);
+  };
+
+  ESP_LOGI(TAG, "Status frame (%d bytes) received", data.size());
+  ESP_LOGVV(TAG, "  %s", format_hex_pretty(&data.front(), data.size()).c_str());
+
+  ESP_LOGV(TAG, "Responding Address: %d", data[7]);
+
+  uint8_t cells = (this->override_cell_count_) ? this->override_cell_count_ : data[8];
+
+  ESP_LOGV(TAG, "Number of cells: %d", cells);
 }
 
 void PaceBms::dump_config() {
@@ -189,7 +226,8 @@ float PaceBms::get_setup_priority() const {
 
 void PaceBms::update() {
   this->track_online_status_();
-  this->send(0x42, this->pack_);
+  this->send(0x42, this->pack_);//analog info
+  //this->send(0x44, this->pack_);//status info
 }
 
 void PaceBms::publish_state_(binary_sensor::BinarySensor *binary_sensor, const bool &state) {

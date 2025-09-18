@@ -105,7 +105,7 @@ bool PaceModbus::parse_pace_modbus_byte_(uint8_t byte) {
     return false;
   }
 
-  uint16_t data_len = at - 4 - 1;
+  uint16_t data_len = at - 4 - 1;//remove checksum and end of frame
   uint16_t computed_crc = chksum(raw + 1, data_len);
   uint16_t remote_crc = uint16_t(ascii_hex_to_byte(raw[at - 4], raw[at - 3])) << 8 |
                         (uint16_t(ascii_hex_to_byte(raw[at - 2], raw[at - 1])) << 0);
@@ -121,6 +121,7 @@ bool PaceModbus::parse_pace_modbus_byte_(uint8_t byte) {
 
   if (data_len < 10) {
     ESP_LOGW(TAG, "Response size is less than minimum allowed. Flushing RX buffer...");
+    return false;
   }
   uint8_t address = data[7];
 

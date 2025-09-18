@@ -115,6 +115,7 @@ class PaceBms : public PollingComponent, public pace_modbus::PaceModbusDevice {
   void publish_state_(sensor::Sensor *sensor, float value);
   void publish_state_(text_sensor::TextSensor *text_sensor, const std::string &state);
   void on_telemetry_data_(const std::vector<uint8_t> &data);
+  void on_status_data_(const std::vector<uint8_t> &data);
   void reset_online_status_tracker_();
   void track_online_status_();
   void publish_device_unavailable_();
