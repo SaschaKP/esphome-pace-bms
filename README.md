@@ -48,7 +48,8 @@ external_components:
   - source: github://SaschaKP/esphome-pace-bms@main
 ```
 
-or just use the `esp32-example.yaml` as proof of concept:
+or just use the `esp32-example.yaml` in combination with `pack.yaml` as proof of concept, `pack.yaml` is a neat idea of @syssi, with a single yaml file you can avoid duplicating the code and maintain main file clean and perfectly readable.
+if you want to do things by hand, here is the example as written by @syssi, but it requires a shell in home assistant and some work by hand, instead if you have the possibility, use samba and modify and use directly from esphome builder, or just look at the example below for hand-work:
 
 ```bash
 # Install esphome
