@@ -202,5 +202,6 @@ uart:
 ## References
 
 * https://github.com/nkinnan/esphome-pace-bms
+* https://github.com/syssi/esphome-seplos-bms
 
 credit goes to @nkinnan and @syssi for giving me the possibility to learn in a blink of an eye how to transform a problem into a solution, THANKS!
