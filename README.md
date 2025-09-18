@@ -32,9 +32,9 @@ ESPHome component to monitor a Pace BMS via UART or RS485
 Please be aware of the different RJ11 pinout
 
 Also consider that if you're using the VTAC from Deye, they should have given you a wifi module.
-That specific module can be reprogrammed and used with my software, upon opening it there are the pinout
-to rewrite firmware, it should use a ESP32-S device, that will be inserted into the ESI port of the
-deye inverter.
+That specific module can be reprogrammed and used with my software, upon opening it there are the pinouts
+stamped on the board, that will allow you to rewrite firmware, it should use a ESP32-S device, that will 
+be inserted into the ESI port of the deye inverter (External Serial Interface).
 
 ## Requirements
 
@@ -166,18 +166,15 @@ None.
 
 ## Protocol
 
-PACE RS232 protocol is really a mess, but anyway you can find sufficient code and docs in: https://github.com/nkinnan/esphome-pace-bms from whom I read and understood some code, and
-also from inspecting the code with a c# decompiler with tools like Jetbrain_dotpeek, with whom I read the specific parts necessary to retrieve correctly the data from my BMSs
+PACE RS232 protocol is really a mess, but anyway you can find sufficient code and docs in: https://github.com/nkinnan/esphome-pace-bms from whom I read and understood some code, and also from inspecting the code of pbmstool with a c# decompiler with tools like Jetbrain_dotpeek, with whom I read the specific parts necessary to retrieve correctly the data from my BMSs
 
 ```
-$ echo -ne "~20004642E00200FD37\r" | hexdump -ve '1/1 "%.2X."'
-      7E.32.30.30.30.34.36.34.32.45.30.30.32.30.30.46.44.33.37.0D.
-
-# Get pack #1 telemetry data (CID2 `0x42` - from SaschaKP git)
+# Get pack #1 telemetry data (CID2 `0x42` - from nkinnan git)
 TX -> "~25014642E00201FD30\r"
 RX <- "~25014600F07A0001100CC70CC80CC70CC70CC70CC50CC60CC70CC70CC60CC70CC60CC60CC70CC60CC7060B9B0B990B990B990BB30BBCFF1FCCCD12D303286A008C2710E1E4\r"
 
 ```
+The code of @nkinnan was lacking the ability to monitor chained batteries, and rewriting it was mostly not possible because of the way it was initially written.
 
 ## Debugging
 
@@ -205,3 +202,5 @@ uart:
 ## References
 
 * https://github.com/nkinnan/esphome-pace-bms
+
+credit goes to @nkinnan and @syssi for giving me the possibility to learn in a blink of an eye how to transform a problem into a solution, THANKS!
