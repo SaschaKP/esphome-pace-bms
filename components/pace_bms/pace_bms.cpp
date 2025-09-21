@@ -237,6 +237,13 @@ void PaceBms::on_status_data_(const std::vector<uint8_t>& data) {
   uint8_t fault_status = data[offset + 1 + cells + 1 + temperatures + 7];  // fault status value
 
   uint16_t balancing_status = pace_get_16bit(offset + 1 + cells + 1 + temperatures + 8);  // balancing state per cell
+  for (int i = 0; i < cells; i++) {
+    bool balancing = (balancing_status & (1 << i)) != 0;
+    this->publish_state_(this->cells_[i].cell_balancing_sensor_, balancing);
+    if (balancing) {
+      ESP_LOGV(TAG, "Cell %d is balancing", i + 1);
+    }
+  }
 }
 
 void PaceBms::dump_config() {

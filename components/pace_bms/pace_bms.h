@@ -42,6 +42,9 @@ class PaceBms : public PollingComponent, public pace_modbus::PaceModbusDevice {
   void set_cell_voltage_text_warning_sensor(uint8_t cell, text_sensor::TextSensor *cell_text_warning_sensor) {
     this->cells_[cell].cell_text_warning_sensor_ = cell_text_warning_sensor;
   }
+  void set_cell_balancing_sensor(uint8_t cell, binary_sensor::BinarySensor *cell_balancing_sensor) {
+    this->cells_[cell].cell_balancing_sensor_ = cell_balancing_sensor;
+  }
 
   void set_temperature_sensor(uint8_t temperature, sensor::Sensor *temperature_sensor) {
     this->temperatures_[temperature].temperature_sensor_ = temperature_sensor;
@@ -147,6 +150,7 @@ class PaceBms : public PollingComponent, public pace_modbus::PaceModbusDevice {
     sensor::Sensor *cell_voltage_sensor_{nullptr};
     sensor::Sensor *cell_warning_sensor_{nullptr};
     text_sensor::TextSensor *cell_text_warning_sensor_{nullptr};
+    binary_sensor::BinarySensor *cell_balancing_sensor_{nullptr};
   } cells_[16];
 
   struct Temperature {

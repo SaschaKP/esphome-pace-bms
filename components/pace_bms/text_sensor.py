@@ -198,10 +198,12 @@ async def to_code(config):
     for i, key in enumerate(CELLS_TEXT_WARNING):
         if key in config:
             conf = config[key]
-            sens = await text_sensor.new_sensor(conf)
+            sens = cg.new_Pvariable(conf[CONF_ID])
+            await text_sensor.register_text_sensor(sens, conf)
             cg.add(hub.set_cell_voltage_text_warning_sensor(i, sens))
     for i, key in enumerate(TEMPERATURES_TEXT_WARNING):
         if key in config:
             conf = config[key]
-            sens = await text_sensor.new_sensor(conf)
+            sens = cg.new_Pvariable(conf[CONF_ID])
+            await text_sensor.register_text_sensor(sens, conf)
             cg.add(hub.set_temperature_text_warning_sensor(i, sens))
