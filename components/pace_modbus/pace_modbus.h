@@ -27,7 +27,7 @@ class PaceModbus : public uart::UARTDevice, public Component {
   void set_flow_control_pin(GPIOPin *flow_control_pin) { this->flow_control_pin_ = flow_control_pin; }
 
  protected:
-  uint16_t rx_timeout_{150};
+  uint16_t rx_timeout_{500};
   GPIOPin *flow_control_pin_{nullptr};
 
   bool parse_pace_modbus_byte_(uint8_t byte);
@@ -36,8 +36,6 @@ class PaceModbus : public uart::UARTDevice, public Component {
   uint32_t last_send_{0};
   std::vector<PaceModbusDevice *> devices_;
 };
-
-uint16_t crc16(const uint8_t *data, uint8_t len);
 
 class PaceModbusDevice {
  public:

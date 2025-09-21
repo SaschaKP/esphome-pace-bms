@@ -22,7 +22,7 @@ CONFIG_SCHEMA = (
         {
             cv.GenerateID(): cv.declare_id(PaceModbus),
             cv.Optional(
-                CONF_RX_TIMEOUT, default="150ms"
+                CONF_RX_TIMEOUT, default="500ms"
             ): cv.positive_time_period_milliseconds,
             cv.Optional(CONF_FLOW_CONTROL_PIN): pins.gpio_output_pin_schema,
         }

@@ -12,12 +12,13 @@ static const uint8_t MAX_NO_RESPONSE_COUNT = 12;//roughly 1 minute at 5 seconds 
 void PaceBms::on_pace_modbus_data(const std::vector<uint8_t> &data) {
   this->reset_online_status_tracker_();
 
-  if (data.size() >= 44 && data[8] >= 8 && data[8] <= 16) {
-    uint8_t guess = 9 + data[8] * 2 + 7; // 9 header + cell count * 2 + tail bytes of the rest
-    if (data.size() - guess > 13) {  // we have telemetry data - this is merely a guess but status is way more short
+  if (data.size() > 32 && data[8] >= 8 && data[8] <= 16)
+  { //estimate data arriving, since UART bus is async and data could arrive even later than what we can expect
+    uint8_t guess = data.size() - (data[8] * 2 + 8);  // stimate guess, 8 cells + 4 temp sensor minimum
+    if (guess >= 24) {  // we have telemetry data - this is merely a guess but status is way more short
       this->on_telemetry_data_(data);
     } else { // we have status data
-      //TODO: read status data
+      this->on_status_data_(data);
     }
 
     return;
@@ -138,6 +139,13 @@ void PaceBms::on_telemetry_data_(const std::vector<uint8_t> &data) {
 
 }
 
+static const char *const WARNING_MESSAGES[4] = {
+    "OK",                 // 0
+    "Below Lower Limit",  //  1
+    "Above Upper Limit",  //  2
+    "Other Fault"         //  Other values
+};
+
 // ==== Status Information
 // 0 Responding Bus Id
 // 1 Cell Count (this example has 16 cells)
@@ -170,9 +178,65 @@ void PaceBms::on_status_data_(const std::vector<uint8_t>& data) {
 
   ESP_LOGV(TAG, "Responding Address: %d", data[7]);
 
-  uint8_t cells = (this->override_cell_count_) ? this->override_cell_count_ : data[8];
+  uint8_t warn_limit = 3; //for future mods
 
+  uint8_t offset = 8;
+  uint8_t cells = (this->override_cell_count_) ? this->override_cell_count_ : data[offset]; // cell count
   ESP_LOGV(TAG, "Number of cells: %d", cells);
+
+  for (uint8_t i = 0; i < std::min((uint8_t) 16, cells); ++i) {
+    uint8_t warn = data[offset + 1 + i]; // cell warning (0 if no warning is emitted)
+    this->publish_state_(this->cells_[i].cell_warning_sensor_, warn);
+    this->publish_state_(this->cells_[i].cell_text_warning_sensor_, WARNING_MESSAGES[std::min(warn_limit, warn)]);
+    if (warn != 0) {
+      ESP_LOGV(TAG, "Cell %d warning: 0x{:x} - %s", i + 1, warn, WARNING_MESSAGES[std::min(warn_limit, warn)]);
+    }
+  }
+
+  uint8_t temperatures = data[offset + 1 + cells]; // temperature count
+  ESP_LOGV(TAG, "Number of temperatures: %d", temperatures);
+
+  for (uint8_t i = 0; i < temperatures; ++i) {
+    uint8_t warn = data[offset + 1 + cells + 1 + i]; // temperature warning (0 if no warning is emitted)
+    this->publish_state_(this->temperatures_[i].temperature_warning_sensor_, warn);
+    this->publish_state_(this->temperatures_[i].temperature_text_warning_sensor_, WARNING_MESSAGES[std::min(warn_limit, warn)]);
+    if (warn != 0) {
+      ESP_LOGV(TAG, "Temperature %d warning: 0x{:x} - %s", i + 1, warn, WARNING_MESSAGES[std::min(warn_limit, warn)]);
+    }
+  }
+
+  uint8_t charge_warn = data[offset + 1 + cells + 1 + temperatures];  // charge current warning (0 if no warning is emitted)
+  this->publish_state_(this->charge_current_warning_sensor_, charge_warn);
+  this->publish_state_(this->charge_current_text_warning_sensor_, WARNING_MESSAGES[std::min(warn_limit, charge_warn)]);
+  if (charge_warn != 0) {
+    ESP_LOGV(TAG, "Charge warning: 0x{:x} - %s", charge_warn, WARNING_MESSAGES[std::min(warn_limit, charge_warn)]);
+  }
+
+  uint8_t voltage_warn = data[offset + 1 + cells + 1 + temperatures + 1]; // total voltage warning (0 if no warning)
+  this->publish_state_(this->total_voltage_warning_sensor_, voltage_warn);
+  this->publish_state_(this->total_voltage_text_warning_sensor_, WARNING_MESSAGES[std::min(warn_limit, voltage_warn)]);
+  if (voltage_warn != 0) {
+    ESP_LOGV(TAG, "Total Voltage warning: 0x{:x} - %s", voltage_warn, WARNING_MESSAGES[std::min(warn_limit, voltage_warn)]);
+  }
+
+  uint8_t discharge_warn = data[offset + 1 + cells + 1 + temperatures + 2]; // discharge current warning (0 if no warning is emitted)
+  this->publish_state_(this->discharge_current_warning_sensor_, discharge_warn);
+  this->publish_state_(this->discharge_current_text_warning_sensor_, WARNING_MESSAGES[std::min(warn_limit, discharge_warn)]);
+  if (discharge_warn != 0) {
+    ESP_LOGV(TAG, "Discharge warning: 0x{:x} - %s", discharge_warn, WARNING_MESSAGES[std::min(warn_limit, discharge_warn)]);
+  }
+
+  uint8_t protect1 = data[offset + 1 + cells + 1 + temperatures + 3]; // protection byte 1 value
+
+  uint8_t protect2 = data[offset + 1 + cells + 1 + temperatures + 4];  // protection byte 2 value
+
+  uint8_t status = data[offset + 1 + cells + 1 + temperatures + 5];  // system status value
+
+  uint8_t conf_status = data[offset + 1 + cells + 1 + temperatures + 6];  // config status value
+
+  uint8_t fault_status = data[offset + 1 + cells + 1 + temperatures + 7];  // fault status value
+
+  uint16_t balancing_status = pace_get_16bit(offset + 1 + cells + 1 + temperatures + 8);  // balancing state per cell
 }
 
 void PaceBms::dump_config() {
@@ -226,8 +290,14 @@ float PaceBms::get_setup_priority() const {
 
 void PaceBms::update() {
   this->track_online_status_();
-  this->send(0x42, this->pack_);//analog info
-  //this->send(0x44, this->pack_);//status info
+  if (status_send_)
+  {
+    this->send(0x44, this->pack_); // status info
+    status_send_ = false;
+  } else {
+    this->send(0x42, this->pack_);  // telemetry info
+    status_send_ = true;
+  }
 }
 
 void PaceBms::publish_state_(binary_sensor::BinarySensor *binary_sensor, const bool &state) {
@@ -295,6 +365,14 @@ void PaceBms::publish_device_unavailable_() {
   for (auto &cell : this->cells_) {
     this->publish_state_(cell.cell_voltage_sensor_, NAN);
   }
+}
+
+void PaceBms::setup() {
+  this->stop_poller();
+  // update interval is for all the sends, so we halve that value, since we have to do telemetry and the status
+  // with one shot, RS232 is an async operation and is pretty slow at 9600bps
+  this->set_update_interval(this->get_update_interval() >> 1);
+  this->start_poller();
 }
 
 }  // namespace pace_bms

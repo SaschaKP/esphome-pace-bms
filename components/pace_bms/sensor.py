@@ -18,6 +18,7 @@ from esphome.const import (
     UNIT_PERCENT,
     UNIT_VOLT,
     UNIT_WATT,
+    ENTITY_CATEGORY_DIAGNOSTIC,
 )
 
 from . import CONF_PACE_BMS_ID, PACE_BMS_COMPONENT_SCHEMA
@@ -81,6 +82,34 @@ ICON_STATE_OF_HEALTH = "mdi:heart-flash"
 
 UNIT_AMPERE_HOURS = "Ah"
 
+CONF_CELL_VOLTAGE_WARNING_1 = "cell_voltage_warning_1"
+CONF_CELL_VOLTAGE_WARNING_2 = "cell_voltage_warning_2"
+CONF_CELL_VOLTAGE_WARNING_3 = "cell_voltage_warning_3"
+CONF_CELL_VOLTAGE_WARNING_4 = "cell_voltage_warning_4"
+CONF_CELL_VOLTAGE_WARNING_5 = "cell_voltage_warning_5"
+CONF_CELL_VOLTAGE_WARNING_6 = "cell_voltage_warning_6"
+CONF_CELL_VOLTAGE_WARNING_7 = "cell_voltage_warning_7"
+CONF_CELL_VOLTAGE_WARNING_8 = "cell_voltage_warning_8"
+CONF_CELL_VOLTAGE_WARNING_9 = "cell_voltage_warning_9"
+CONF_CELL_VOLTAGE_WARNING_10 = "cell_voltage_warning_10"
+CONF_CELL_VOLTAGE_WARNING_11 = "cell_voltage_warning_11"
+CONF_CELL_VOLTAGE_WARNING_12 = "cell_voltage_warning_12"
+CONF_CELL_VOLTAGE_WARNING_13 = "cell_voltage_warning_13"
+CONF_CELL_VOLTAGE_WARNING_14 = "cell_voltage_warning_14"
+CONF_CELL_VOLTAGE_WARNING_15 = "cell_voltage_warning_15"
+CONF_CELL_VOLTAGE_WARNING_16 = "cell_voltage_warning_16"
+
+CONF_TEMPERATURE_WARNING_1 = "temperature_warning_1"
+CONF_TEMPERATURE_WARNING_2 = "temperature_warning_2"
+CONF_TEMPERATURE_WARNING_3 = "temperature_warning_3"
+CONF_TEMPERATURE_WARNING_4 = "temperature_warning_4"
+CONF_TEMPERATURE_WARNING_5 = "temperature_warning_5"
+CONF_TEMPERATURE_WARNING_6 = "temperature_warning_6"
+
+CONF_PACK_CHARGE_WARNING = "pack_charge_warning"
+CONF_PACK_VOLTAGE_WARNING = "pack_voltage_warning"
+CONF_PACK_DISCHARGE_WARNING = "pack_discharge_warning"
+
 CELLS = [
     CONF_CELL_VOLTAGE_1,
     CONF_CELL_VOLTAGE_2,
@@ -100,6 +129,25 @@ CELLS = [
     CONF_CELL_VOLTAGE_16,
 ]
 
+CELLS_WARNING = [
+    CONF_CELL_VOLTAGE_WARNING_1,
+    CONF_CELL_VOLTAGE_WARNING_2,
+    CONF_CELL_VOLTAGE_WARNING_3,
+    CONF_CELL_VOLTAGE_WARNING_4,
+    CONF_CELL_VOLTAGE_WARNING_5,
+    CONF_CELL_VOLTAGE_WARNING_6,
+    CONF_CELL_VOLTAGE_WARNING_7,
+    CONF_CELL_VOLTAGE_WARNING_8,
+    CONF_CELL_VOLTAGE_WARNING_9,
+    CONF_CELL_VOLTAGE_WARNING_10,
+    CONF_CELL_VOLTAGE_WARNING_11,
+    CONF_CELL_VOLTAGE_WARNING_12,
+    CONF_CELL_VOLTAGE_WARNING_13,
+    CONF_CELL_VOLTAGE_WARNING_14,
+    CONF_CELL_VOLTAGE_WARNING_15,
+    CONF_CELL_VOLTAGE_WARNING_16,
+]
+
 TEMPERATURES = [
     CONF_TEMPERATURE_1,
     CONF_TEMPERATURE_2,
@@ -107,6 +155,15 @@ TEMPERATURES = [
     CONF_TEMPERATURE_4,
     CONF_TEMPERATURE_5,
     CONF_TEMPERATURE_6,
+]
+
+TEMPERATURES_WARNING = [
+    CONF_TEMPERATURE_WARNING_1,
+    CONF_TEMPERATURE_WARNING_2,
+    CONF_TEMPERATURE_WARNING_3,
+    CONF_TEMPERATURE_WARNING_4,
+    CONF_TEMPERATURE_WARNING_5,
+    CONF_TEMPERATURE_WARNING_6,
 ]
 
 SENSORS = [
@@ -127,6 +184,9 @@ SENSORS = [
     CONF_RATED_CAPACITY,
     CONF_CHARGING_CYCLES,
     CONF_STATE_OF_HEALTH,
+    CONF_PACK_CHARGE_WARNING,
+    CONF_PACK_VOLTAGE_WARNING,
+    CONF_PACK_DISCHARGE_WARNING,
 ]
 
 # pylint: disable=too-many-function-args
@@ -286,6 +346,86 @@ CONFIG_SCHEMA = PACE_BMS_COMPONENT_SCHEMA.extend(
             device_class=DEVICE_CLASS_VOLTAGE,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
+        cv.Optional(CONF_CELL_VOLTAGE_WARNING_1): sensor.sensor_schema(
+            icon=ICON_EMPTY,
+            accuracy_decimals=0,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        cv.Optional(CONF_CELL_VOLTAGE_WARNING_2): sensor.sensor_schema(
+            icon=ICON_EMPTY,
+            accuracy_decimals=0,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        cv.Optional(CONF_CELL_VOLTAGE_WARNING_3): sensor.sensor_schema(
+            icon=ICON_EMPTY,
+            accuracy_decimals=0,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        cv.Optional(CONF_CELL_VOLTAGE_WARNING_4): sensor.sensor_schema(
+            icon=ICON_EMPTY,
+            accuracy_decimals=0,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        cv.Optional(CONF_CELL_VOLTAGE_WARNING_5): sensor.sensor_schema(
+            icon=ICON_EMPTY,
+            accuracy_decimals=0,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        cv.Optional(CONF_CELL_VOLTAGE_WARNING_6): sensor.sensor_schema(
+            icon=ICON_EMPTY,
+            accuracy_decimals=0,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        cv.Optional(CONF_CELL_VOLTAGE_WARNING_7): sensor.sensor_schema(
+            icon=ICON_EMPTY,
+            accuracy_decimals=0,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        cv.Optional(CONF_CELL_VOLTAGE_WARNING_8): sensor.sensor_schema(
+            icon=ICON_EMPTY,
+            accuracy_decimals=0,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        cv.Optional(CONF_CELL_VOLTAGE_WARNING_9): sensor.sensor_schema(
+            icon=ICON_EMPTY,
+            accuracy_decimals=0,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        cv.Optional(CONF_CELL_VOLTAGE_WARNING_10): sensor.sensor_schema(
+            icon=ICON_EMPTY,
+            accuracy_decimals=0,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        cv.Optional(CONF_CELL_VOLTAGE_WARNING_11): sensor.sensor_schema(
+            icon=ICON_EMPTY,
+            accuracy_decimals=0,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        cv.Optional(CONF_CELL_VOLTAGE_WARNING_12): sensor.sensor_schema(
+            icon=ICON_EMPTY,
+            accuracy_decimals=0,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        cv.Optional(CONF_CELL_VOLTAGE_WARNING_13): sensor.sensor_schema(
+            icon=ICON_EMPTY,
+            accuracy_decimals=0,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        cv.Optional(CONF_CELL_VOLTAGE_WARNING_14): sensor.sensor_schema(
+            icon=ICON_EMPTY,
+            accuracy_decimals=0,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        cv.Optional(CONF_CELL_VOLTAGE_WARNING_15): sensor.sensor_schema(
+            icon=ICON_EMPTY,
+            accuracy_decimals=0,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        cv.Optional(CONF_CELL_VOLTAGE_WARNING_16): sensor.sensor_schema(
+            icon=ICON_EMPTY,
+            accuracy_decimals=0,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
         cv.Optional(CONF_TEMPERATURE_1): sensor.sensor_schema(
             unit_of_measurement=UNIT_CELSIUS,
             icon=ICON_EMPTY,
@@ -327,6 +467,36 @@ CONFIG_SCHEMA = PACE_BMS_COMPONENT_SCHEMA.extend(
             accuracy_decimals=1,
             device_class=DEVICE_CLASS_TEMPERATURE,
             state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        cv.Optional(CONF_TEMPERATURE_WARNING_1): sensor.sensor_schema(
+            icon=ICON_EMPTY,
+            accuracy_decimals=0,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        cv.Optional(CONF_TEMPERATURE_WARNING_2): sensor.sensor_schema(
+            icon=ICON_EMPTY,
+            accuracy_decimals=0,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        cv.Optional(CONF_TEMPERATURE_WARNING_3): sensor.sensor_schema(
+            icon=ICON_EMPTY,
+            accuracy_decimals=0,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        cv.Optional(CONF_TEMPERATURE_WARNING_4): sensor.sensor_schema(
+            icon=ICON_EMPTY,
+            accuracy_decimals=0,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        cv.Optional(CONF_TEMPERATURE_WARNING_5): sensor.sensor_schema(
+            icon=ICON_EMPTY,
+            accuracy_decimals=0,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        cv.Optional(CONF_TEMPERATURE_WARNING_6): sensor.sensor_schema(
+            icon=ICON_EMPTY,
+            accuracy_decimals=0,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         ),
         cv.Optional(CONF_TOTAL_VOLTAGE): sensor.sensor_schema(
             unit_of_measurement=UNIT_VOLT,
@@ -404,6 +574,21 @@ CONFIG_SCHEMA = PACE_BMS_COMPONENT_SCHEMA.extend(
             device_class=DEVICE_CLASS_EMPTY,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
+        cv.Optional(CONF_PACK_CHARGE_WARNING): sensor.sensor_schema(
+            icon=ICON_EMPTY,
+            accuracy_decimals=0,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        cv.Optional(CONF_PACK_VOLTAGE_WARNING): sensor.sensor_schema(
+            icon=ICON_EMPTY,
+            accuracy_decimals=0,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        cv.Optional(CONF_PACK_DISCHARGE_WARNING): sensor.sensor_schema(
+            icon=ICON_EMPTY,
+            accuracy_decimals=0,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
     }
 )
 
@@ -420,6 +605,16 @@ async def to_code(config):
             conf = config[key]
             sens = await sensor.new_sensor(conf)
             cg.add(hub.set_temperature_sensor(i, sens))
+    for i, key in enumerate(CELLS_WARNING):
+        if key in config:
+            conf = config[key]
+            sens = await sensor.new_sensor(conf)
+            cg.add(hub.set_cell_voltage_warning_sensor(i, sens))
+    for i, key in enumerate(TEMPERATURES_WARNING):
+        if key in config:
+            conf = config[key]
+            sens = await sensor.new_sensor(conf)
+            cg.add(hub.set_temperature_warning_sensor(i, sens))
     for key in SENSORS:
         if key in config:
             conf = config[key]

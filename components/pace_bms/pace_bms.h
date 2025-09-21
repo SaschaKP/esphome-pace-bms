@@ -36,9 +36,23 @@ class PaceBms : public PollingComponent, public pace_modbus::PaceModbusDevice {
   void set_cell_voltage_sensor(uint8_t cell, sensor::Sensor *cell_voltage_sensor) {
     this->cells_[cell].cell_voltage_sensor_ = cell_voltage_sensor;
   }
+  void set_cell_voltage_warning_sensor(uint8_t cell, sensor::Sensor *cell_warning_sensor) {
+    this->cells_[cell].cell_warning_sensor_ = cell_warning_sensor;
+  }
+  void set_cell_voltage_text_warning_sensor(uint8_t cell, text_sensor::TextSensor *cell_text_warning_sensor) {
+    this->cells_[cell].cell_text_warning_sensor_ = cell_text_warning_sensor;
+  }
+
   void set_temperature_sensor(uint8_t temperature, sensor::Sensor *temperature_sensor) {
     this->temperatures_[temperature].temperature_sensor_ = temperature_sensor;
   }
+  void set_temperature_warning_sensor(uint8_t temperature, sensor::Sensor *temperature_warning_sensor) {
+    this->temperatures_[temperature].temperature_warning_sensor_ = temperature_warning_sensor;
+  }
+  void set_temperature_text_warning_sensor(uint8_t temperature, text_sensor::TextSensor *temperature_text_warning_sensor) {
+    this->temperatures_[temperature].temperature_text_warning_sensor_ = temperature_text_warning_sensor;
+  }
+
   void set_total_voltage_sensor(sensor::Sensor *total_voltage_sensor) { total_voltage_sensor_ = total_voltage_sensor; }
   void set_current_sensor(sensor::Sensor *current_sensor) { current_sensor_ = current_sensor; }
   void set_power_sensor(sensor::Sensor *power_sensor) { power_sensor_ = power_sensor; }
@@ -66,8 +80,29 @@ class PaceBms : public PollingComponent, public pace_modbus::PaceModbusDevice {
   void set_state_of_health_sensor(sensor::Sensor *state_of_health_sensor) {
     state_of_health_sensor_ = state_of_health_sensor;
   }
+  void set_pack_charge_warning_sensor(sensor::Sensor *pack_charge_warning) {
+    charge_current_warning_sensor_ = pack_charge_warning;
+  }
+  void set_pack_voltage_warning_sensor(sensor::Sensor *pack_voltage_warning) {
+    total_voltage_warning_sensor_ = pack_voltage_warning;
+  }
+  void set_pack_discharge_warning_sensor(sensor::Sensor *pack_discharge_warning) {
+    discharge_current_warning_sensor_ = pack_discharge_warning;
+  }
   
   void set_errors_text_sensor(text_sensor::TextSensor *errors_text_sensor) { errors_text_sensor_ = errors_text_sensor; }
+
+  void set_pack_charge_text_warning_text_sensor(text_sensor::TextSensor *pack_charge_text_warning) {
+    charge_current_text_warning_sensor_ = pack_charge_text_warning;
+  }
+
+  void set_pack_voltage_text_warning_text_sensor(text_sensor::TextSensor *total_voltage_text_warning_sensor) {
+    total_voltage_text_warning_sensor_ = total_voltage_text_warning_sensor;
+  }
+
+  void set_pack_discharge_text_warning_text_sensor(text_sensor::TextSensor *pack_discharge_text_warning) {
+    discharge_current_text_warning_sensor_ = pack_discharge_text_warning;
+  }
 
   void set_override_cell_count(uint8_t override_cell_count) { this->override_cell_count_ = override_cell_count; }
 
@@ -75,6 +110,7 @@ class PaceBms : public PollingComponent, public pace_modbus::PaceModbusDevice {
 
   void dump_config() override;
   void update() override;
+  void setup() override;
   float get_setup_priority() const override;
 
  protected:
@@ -97,19 +133,31 @@ class PaceBms : public PollingComponent, public pace_modbus::PaceModbusDevice {
   sensor::Sensor *rated_capacity_sensor_;
   sensor::Sensor *charging_cycles_sensor_;
   sensor::Sensor *state_of_health_sensor_;
+
+  sensor::Sensor *charge_current_warning_sensor_;
+  text_sensor::TextSensor *charge_current_text_warning_sensor_;
+  sensor::Sensor *total_voltage_warning_sensor_;
+  text_sensor::TextSensor *total_voltage_text_warning_sensor_;
+  sensor::Sensor *discharge_current_warning_sensor_;
+  text_sensor::TextSensor *discharge_current_text_warning_sensor_;
   
   text_sensor::TextSensor *errors_text_sensor_;
 
   struct Cell {
     sensor::Sensor *cell_voltage_sensor_{nullptr};
+    sensor::Sensor *cell_warning_sensor_{nullptr};
+    text_sensor::TextSensor *cell_text_warning_sensor_{nullptr};
   } cells_[16];
 
   struct Temperature {
     sensor::Sensor *temperature_sensor_{nullptr};
+    sensor::Sensor *temperature_warning_sensor_{nullptr};
+    text_sensor::TextSensor *temperature_text_warning_sensor_{nullptr};
   } temperatures_[6];
 
   uint8_t override_cell_count_{0};
   uint8_t no_response_count_{0};
+  bool status_send_{false};
 
   void publish_state_(binary_sensor::BinarySensor *binary_sensor, const bool &state);
   void publish_state_(sensor::Sensor *sensor, float value);
