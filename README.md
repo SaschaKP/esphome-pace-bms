@@ -8,7 +8,6 @@ ESPHome component to monitor a Pace BMS via UART or RS485
 * POWMR (POW-LIO48200-16S)
   ```
   protocol_version: 0x25
-  override_pack: 1
   ```
 
 ## Untested devices
@@ -49,7 +48,8 @@ external_components:
   - source: github://SaschaKP/esphome-pace-bms@main
 ```
 
-or just use the `esp32-example.yaml` as proof of concept:
+or just use the `esp32-example.yaml` in combination with `pack.yaml` as proof of concept, `pack.yaml` is a neat idea of @syssi, with a single yaml file you can avoid duplicating the code and maintain main file clean and perfectly readable.
+if you want to do things by hand, here is the example as written by @syssi, but it requires a shell in home assistant and some work by hand, instead if you have the possibility, use samba and modify and use directly from esphome builder, or just look at the example below for hand-work:
 
 ```bash
 # Install esphome
@@ -202,5 +202,6 @@ uart:
 ## References
 
 * https://github.com/nkinnan/esphome-pace-bms
+* https://github.com/syssi/esphome-seplos-bms
 
 credit goes to @nkinnan and @syssi for giving me the possibility to learn in a blink of an eye how to transform a problem into a solution, THANKS!

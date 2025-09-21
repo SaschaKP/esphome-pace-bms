@@ -42,7 +42,7 @@ mqtt:
 
 uart:
   - id: uart_1
-    #default baud_rate is 9600 for PACE RS232, also the DEYE ESI WIFI MODULE has RX and TX inverted
+    #default baud_rate is 9600 for PACE RS232, also the DEYE ESI WIFI MODULE use this RX and TX, on other modules this may vary
     baud_rate: 9600 
     tx_pin: GPIO17
     rx_pin: GPIO16
