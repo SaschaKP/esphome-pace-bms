@@ -311,7 +311,7 @@ void PaceBms::on_status_data_(const std::vector<uint8_t>& data) {
   }
   if (str.length() > 1) {
     str.pop_back();
-    ESP_LOGI(TAG, "Protect Messages: %s", str.c_str());
+    ESP_LOGV(TAG, "Protect Messages: %s", str.c_str());
   }
   str.clear();
   
@@ -323,7 +323,7 @@ void PaceBms::on_status_data_(const std::vector<uint8_t>& data) {
   }
   if (str.length() > 1) {
     str.pop_back();
-    ESP_LOGI(TAG, "Status Messages: %s", str.c_str());
+    ESP_LOGV(TAG, "Status Messages: %s", str.c_str());
   }
   str.clear();
 
@@ -335,7 +335,7 @@ void PaceBms::on_status_data_(const std::vector<uint8_t>& data) {
   }
   if (str.length() > 1) {
     str.pop_back();
-    ESP_LOGI(TAG, "Config Messages: %s", str.c_str());
+    ESP_LOGV(TAG, "Config Messages: %s", str.c_str());
   }
   str.clear();
 
@@ -347,7 +347,7 @@ void PaceBms::on_status_data_(const std::vector<uint8_t>& data) {
   }
   if (str.length() > 1) {
     str.pop_back();
-    ESP_LOGI(TAG, "Fault Messages: %s", str.c_str());
+    ESP_LOGV(TAG, "Fault Messages: %s", str.c_str());
   }
   str.clear();
 
