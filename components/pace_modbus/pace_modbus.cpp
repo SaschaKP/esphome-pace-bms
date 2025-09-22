@@ -177,7 +177,8 @@ bool PaceModbus::parse_pace_modbus_byte_(uint8_t byte) {
   }
 
   if (data[3] != 0) {
-    ESP_LOGW(TAG, "Data received with error code 0x%02X (data_len: 0x%02X): %s", data[3], data[5],
+    ESP_LOGW(TAG, "Data received with error code 0x%02X (data_len: 0x%04X): %s", data[3],
+             ((uint16_t(data[4]) << 8) | (uint16_t(data[5]) << 0)) & 0x0FFF, //left 4 bits are for CRC, right 4 bits and a full byte are for size (0xFFF)
              format_hex_pretty(&data.front(), data.size()).c_str());
     return false;
   }
@@ -221,7 +222,7 @@ void PaceModbus::send(uint8_t protocol_version, uint8_t address, uint8_t functio
   data.push_back(function);          // CID2 (0x42)
   data.push_back(lenid >> 8);        // LCHKSUM (0xE0)
   data.push_back(lenid >> 0);        // LENGTH (0x02)
-  data.push_back(value);             // VALUE (0x00)
+  data.push_back(value);             // PACK for who we are requesting
 
   const uint16_t frame_len = data.size();
   std::string payload = "~";  // SOF (0x7E)

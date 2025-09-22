@@ -24,7 +24,8 @@ void PaceBms::on_pace_modbus_data(const std::vector<uint8_t> &data) {
     return;
   }
 
-  ESP_LOGW(TAG, "Unhandled data received (data_len: 0x%02X): %s", data[5],
+  ESP_LOGW(TAG, "Unhandled data received (data_len: 0x%04X): %s",
+           ((uint16_t(data[4]) << 8) | (uint16_t(data[5]) << 0)) & 0x0FFF, //left 4 bits are for CRC, right 4 bits and a full byte are for size (0xFFF)
            format_hex_pretty(&data.front(), data.size()).c_str());
 }
 
@@ -33,7 +34,9 @@ void PaceBms::on_telemetry_data_(const std::vector<uint8_t> &data) {
     return (uint16_t(data[i + 0]) << 8) | (uint16_t(data[i + 1]) << 0);
   };
 
-  ESP_LOGI(TAG, "Telemetry frame (%d bytes) received for address 0x%02X", data.size(), data[7]);
+  uint16_t data_len = pace_get_16bit(4) & 0x0FFF;
+
+  ESP_LOGI(TAG, "Telemetry frame (%d total bytes - data length %d) received for address 0x%02X", data.size(), data_len, data[7]);
   ESP_LOGVV(TAG, "  %s", format_hex_pretty(&data.front(), data.size()).c_str());
 
   // ->
@@ -41,23 +44,23 @@ void PaceBms::on_telemetry_data_(const std::vector<uint8_t> &data) {
   //
   // *Data*
   //
-  // Byte   Address Content: Description                      Decoded content               Coeff./Unit
-  //   0    0x25             Protocol version      VER        2.0
-  //   1    0x01             Device address        ADR        Address of the battery that sends the data (usually CAN/485A or RS232)
-  //   2    0x46             Device type           CID1       Lithium iron phosphate battery BMS
-  //   3    0x00             Function code         CID2       0x00: Normal, 0x01 VER error, 0x02 Chksum error, ...
-  //   4    0xF0             Data length checksum  LCHKSUM
-  //   5    0x7A             Data length           LENID      122 / 2 = 61
-  //   6    0x00             Data flag
-  //   7    0x01             Responding Address               address of the responding battery (485B/A - RS232 *ONLY*)
-  //   8    0x10             Number of cells                  16
+  // Byte   Address Content: Description                        Decoded content               Coeff./Unit
+  //   0    0x25             Protocol version        VER        2.0
+  //   1    0x01             Device address          ADR        Address of the battery that sends the data (usually CAN/485A or RS232)
+  //   2    0x46             Device type             CID1       Lithium iron phosphate battery BMS
+  //   3    0x00             Function code           CID2       0x00: Normal, 0x01 VER error, 0x02 Chksum error, ...
+  //   4    0xF0             checksum + Data length  LCHKSUM
+  //   5    0x7A             Data length             LENID      0x07A = 122 / 2 = 61
+  //   6    0x00             Data flag               
+  //   7    0x01             Responding Address                 address of the responding battery (485B/A - RS232 *ONLY*)
+  //   8    0x10             Number of cells                    16
   uint8_t cells = (this->override_cell_count_) ? this->override_cell_count_ : data[8];
 
   ESP_LOGV(TAG, "Number of cells: %d", cells);
-  //   9      0x0C 0xC7      Cell voltage 1                   3287 * 0.001f = 3.271         V
-  //   11     0x0C 0xC8      Cell voltage 2                   3305 * 0.001f = 3.272         V
-  //   ...    ...            ...
-  //   39     0x0C 0xC7      Cell voltage 16                                                V
+  //   9      0x0C 0xC7      Cell voltage 1                     3287 * 0.001f = 3.271         V
+  //   11     0x0C 0xC8      Cell voltage 2                     3305 * 0.001f = 3.272         V
+  //   ...    ...            ...                       
+  //   39     0x0C 0xC7      Cell voltage 16                                                  V
   float min_cell_voltage = 100.0f;
   float max_cell_voltage = -100.0f;
   float average_cell_voltage = 0.0f;
@@ -139,10 +142,10 @@ void PaceBms::on_telemetry_data_(const std::vector<uint8_t> &data) {
 }
 
 static const char *const WARNING_MESSAGES[4] = {
-    "OK",                 // 0
+    "OK",                 //  0
     "Below Lower Limit",  //  1
     "Above Upper Limit",  //  2
-    "Other Fault"         //  Other values
+    "Other Warning"       //  Other values
 };
 
 /*static const char *const PROTECT_1_MESSAGES[8] = {
@@ -246,7 +249,9 @@ void PaceBms::on_status_data_(const std::vector<uint8_t>& data) {
     return (uint16_t(data[i + 0]) << 8) | (uint16_t(data[i + 1]) << 0);
   };
 
-  ESP_LOGI(TAG, "Status frame (%d bytes) received for address 0x%02X", data.size(), data[7]);
+  uint16_t data_len = pace_get_16bit(4) & 0x0FFF;
+
+  ESP_LOGI(TAG, "Status frame (%d total bytes - data length %d) received for address 0x%02X", data.size(), data_len, data[7]);
   ESP_LOGVV(TAG, "  %s", format_hex_pretty(&data.front(), data.size()).c_str());
 
   uint8_t warn_limit = 3; //for future mods
