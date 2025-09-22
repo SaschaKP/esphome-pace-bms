@@ -25,6 +25,7 @@ class PaceModbus : public uart::UARTDevice, public Component {
   void send(uint8_t protocol_version, uint8_t address, uint8_t function, uint8_t value);
   void set_rx_timeout(uint16_t rx_timeout) { rx_timeout_ = rx_timeout; }
   void set_flow_control_pin(GPIOPin *flow_control_pin) { this->flow_control_pin_ = flow_control_pin; }
+  uint16_t get_rx_timeout() { return rx_timeout_; }
 
  protected:
   uint16_t rx_timeout_{500};
@@ -47,6 +48,8 @@ class PaceModbusDevice {
   void send(uint8_t function, uint8_t value) {
     this->parent_->send(this->protocol_version_, this->address_, function, value);
   }
+  uint16_t get_rx_timeout() { return this->parent_->get_rx_timeout(); }
+  uint8_t get_address() { return this->address_; }
 
  protected:
   friend PaceModbus;

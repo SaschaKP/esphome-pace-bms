@@ -146,6 +146,80 @@ static const char *const WARNING_MESSAGES[4] = {
     "Other Fault"         //  Other values
 };
 
+/*static const char *const PROTECT_1_MESSAGES[8] = {
+    "High Cell Voltage\n",       // bit 1
+    "Low Cell Voltage\n",        // bit 2
+    "High Total Voltage\n",      // bit 3
+    "Low Total Voltage\n",       // bit 4
+    "Charge Current\n",          // bit 5
+    "Discharge Current\n",       // bit 6
+    "Short Circuit\n",           // bit 7
+    "Charger High Voltage IN\n", // bit 8
+};
+
+static const char *const PROTECT_2_MESSAGES[8] = {
+    "High Charge Temperature\n",        // bit 1
+    "High Discharge Temperature\n",     // bit 2
+    "Low Charge Temperature\n",         // bit 3
+    "Low Discharge Temperature\n",      // bit 4
+    "High MOSFET Temperature\n",        // bit 5
+    "High Environmental Temperature\n", // bit 6
+    "Low Environmental Temperature\n",  // bit 7
+    "Fully\n",                          // bit 8
+};*/
+
+static const char *const PROTECT_MESSAGES[16] = {
+    "High Cell Voltage\n",               // bit 1
+    "Low Cell Voltage\n",                // bit 2
+    "High Total Voltage\n",              // bit 3
+    "Low Total Voltage\n",               // bit 4
+    "Charge Current\n",                  // bit 5
+    "Discharge Current\n",               // bit 6
+    "Short Circuit\n",                   // bit 7
+    "Charger High Voltage IN\n",         // bit 8
+    "High Charge Temperature\n",         // bit 9
+    "High Discharge Temperature\n",      // bit 10
+    "Low Charge Temperature\n",          // bit 11
+    "Low Discharge Temperature\n",       // bit 12
+    "High MOSFET Temperature\n",         // bit 13
+    "High Environmental Temperature\n",  // bit 14
+    "Low Environmental Temperature\n",   // bit 15
+    "Fully\n",                           // bit 16
+};
+
+static const char *const STATUS_MESSAGES[8] = {
+    "Charge Current Limiter Disabled\n",       // bit 1
+    "Charge MOSFET On\n",                      // bit 2
+    "Discharge MOSFET On\n",                   // bit 3
+    "Discharging\n",                           // bit 4
+    "Positive/Negative Terminals Inverted\n",  // bit 5
+    "Charging\n",                              // bit 6
+    "AC IN\n",                                 // bit 7
+    "Heater Enabled\n",                        // bit 8
+};
+
+static const char *const FAULT_MESSAGES[8] = {
+    "Charge MOSFET fault\n",     // bit 1
+    "Discharge MOSFET fault\n",  // bit 2
+    "NTC fault\n",               // bit 3
+    "Comm Fault\n",              // bit 4
+    "Cell fault\n",              // bit 5
+    "Sampling Fault\n",          // bit 6
+    "CCB Fault\n",               // bit 7
+    "Heater Fault\n",            // bit 8
+};
+
+static const char *const CONFIG_MESSAGES[8] = {
+    "Warning Buzzer Enabled\n",         // bit 1  
+    "Charge MOSFET Turned Off\n",       // bit 2
+    "Discharge MOSFET Turned Off\n",    // bit 3
+    "",                                 // bit 4
+    "Charge Current Limiter Enabled\n", // bit 5
+    "Warning LED Enabled\n",            // bit 6
+    "Static Balance\n",                 // bit 7
+    "Undefined bit 8\n",                // bit 8
+};
+
 // ==== Status Information
 // 0 Responding Bus Id
 // 1 Cell Count (this example has 16 cells)
@@ -226,18 +300,59 @@ void PaceBms::on_status_data_(const std::vector<uint8_t>& data) {
     ESP_LOGV(TAG, "Discharge warning: 0x{:x} - %s", discharge_warn, WARNING_MESSAGES[std::min(warn_limit, discharge_warn)]);
   }
 
-  uint8_t protect1 = data[offset + 1 + cells + 1 + temperatures + 3]; // protection byte 1 value
-
-  uint8_t protect2 = data[offset + 1 + cells + 1 + temperatures + 4];  // protection byte 2 value
-
+  //uint8_t protect1 = data[offset + 1 + cells + 1 + temperatures + 3]; // protection 1 value
+  //uint8_t protect2 = data[offset + 1 + cells + 1 + temperatures + 4];  // protection 2 value
+  uint16_t protect = pace_get_16bit(offset + 1 + cells + 1 + temperatures + 3);
+  std::string str;
+  for (uint8_t i = 0; i < 16; ++i) {
+    if ((protect & (1 << i)) != 0) {
+      str.append(PROTECT_MESSAGES[i]);
+    }
+  }
+  if (str.length() > 1) {
+    str.pop_back();
+    ESP_LOGI(TAG, "Protect Messages: %s", str.c_str());
+  }
+  str.clear();
+  
   uint8_t status = data[offset + 1 + cells + 1 + temperatures + 5];  // system status value
+  for (uint8_t i = 0; i < 8; ++i) {
+    if ((status & (1 << i)) != 0) {
+      str.append(STATUS_MESSAGES[i]);
+    }
+  }
+  if (str.length() > 1) {
+    str.pop_back();
+    ESP_LOGI(TAG, "Status Messages: %s", str.c_str());
+  }
+  str.clear();
 
   uint8_t conf_status = data[offset + 1 + cells + 1 + temperatures + 6];  // config status value
+  for (uint8_t i = 0; i < 8; ++i) {
+    if ((conf_status & (1 << i)) != 0) {
+      str.append(CONFIG_MESSAGES[i]);
+    }
+  }
+  if (str.length() > 1) {
+    str.pop_back();
+    ESP_LOGI(TAG, "Config Messages: %s", str.c_str());
+  }
+  str.clear();
 
   uint8_t fault_status = data[offset + 1 + cells + 1 + temperatures + 7];  // fault status value
+  for (uint8_t i = 0; i < 8; ++i) {
+    if ((fault_status & (1 << i)) != 0) {
+      str.append(FAULT_MESSAGES[i]);
+    }
+  }
+  if (str.length() > 1) {
+    str.pop_back();
+    ESP_LOGI(TAG, "Fault Messages: %s", str.c_str());
+  }
+  str.clear();
 
   uint16_t balancing_status = pace_get_16bit(offset + 1 + cells + 1 + temperatures + 8);  // balancing state per cell
-  for (int i = 0; i < cells; i++) {
+  for (uint8_t i = 0; i < cells; ++i) {
     bool balancing = (balancing_status & (1 << i)) != 0;
     this->publish_state_(this->cells_[i].cell_balancing_sensor_, balancing);
     if (balancing) {
@@ -378,8 +493,14 @@ void PaceBms::setup() {
   this->stop_poller();
   // update interval is for all the sends, so we halve that value, since we have to do telemetry and the status
   // with one shot, RS232 is an async operation and is pretty slow at 9600bps
-  this->set_update_interval(this->get_update_interval() >> 1);
-  this->start_poller();
+  this->set_retry(
+      "", this->get_rx_timeout() * (this->get_address() + 1), 1,
+      [this](const uint8_t remaining_attempts) {
+        this->set_update_interval(this->get_update_interval() >> 1);
+        this->start_poller();
+        return RetryResult::DONE;
+      },
+      1);
 }
 
 }  // namespace pace_bms
