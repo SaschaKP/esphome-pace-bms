@@ -79,3 +79,39 @@ sensor:
       name: "${pack} charging cycles"
     state_of_health:
       name: "${pack} state of health"
+
+binary_sensor:
+  - platform: pace_bms
+    pace_bms_id: ${pace_bms_id}
+    cell_balancing_1:
+      name: "${pack} balancing state 1"
+    cell_balancing_2:
+      name: "${pack} balancing state 2"
+    cell_balancing_3:
+      name: "${pack} balancing state 3"
+    cell_balancing_4:
+      name: "${pack} balancing state 4"
+    cell_balancing_5:
+      name: "${pack} balancing state 5"
+    cell_balancing_6:
+      name: "${pack} balancing state 6"
+    cell_balancing_7:
+      name: "${pack} balancing state 7"
+    cell_balancing_8:
+      name: "${pack} balancing state 8"
+    cell_balancing_9:
+      name: "${pack} balancing state 9"
+    cell_balancing_10:
+      name: "${pack} balancing state 10"
+    cell_balancing_11:
+      name: "${pack} balancing state 11"
+    cell_balancing_12:
+      name: "${pack} balancing state 12"
+    cell_balancing_13:
+      name: "${pack} balancing state 13"
+    cell_balancing_14:
+      name: "${pack} balancing state 14"
+    cell_balancing_15:
+      name: "${pack} balancing state 15"
+    cell_balancing_16:
+      name: "${pack} balancing state 16"
