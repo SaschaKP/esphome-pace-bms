@@ -113,7 +113,6 @@ class PaceBms : public PollingComponent, public pace_modbus::PaceModbusDevice {
 
   void dump_config() override;
   void update() override;
-  void setup() override;
   float get_setup_priority() const override;
 
  protected:

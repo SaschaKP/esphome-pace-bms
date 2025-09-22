@@ -1,8 +1,9 @@
 from esphome import pins
+from esphome import core
 import esphome.codegen as cg
 from esphome.components import uart
 import esphome.config_validation as cv
-from esphome.const import CONF_ADDRESS, CONF_FLOW_CONTROL_PIN, CONF_ID
+from esphome.const import CONF_ADDRESS, CONF_FLOW_CONTROL_PIN, CONF_ID, CONF_UPDATE_INTERVAL
 from esphome.cpp_helpers import gpio_pin_expression
 
 DEPENDENCIES = ["uart"]
@@ -24,6 +25,11 @@ CONFIG_SCHEMA = (
             cv.Optional(
                 CONF_RX_TIMEOUT, default="500ms"
             ): cv.positive_time_period_milliseconds,
+            cv.Optional(
+                CONF_UPDATE_INTERVAL, default="10s"
+            ): cv.All(
+                cv.positive_time_period_milliseconds,
+                cv.Range(min=core.TimePeriod(milliseconds=5000), max=core.TimePeriod(milliseconds=60000))),
             cv.Optional(CONF_FLOW_CONTROL_PIN): pins.gpio_output_pin_schema,
         }
     )
@@ -39,6 +45,7 @@ async def to_code(config):
     await uart.register_uart_device(var, config)
 
     cg.add(var.set_rx_timeout(config[CONF_RX_TIMEOUT]))
+    cg.add(var.set_update_interval(config[CONF_UPDATE_INTERVAL]))
     if CONF_FLOW_CONTROL_PIN in config:
         pin = await gpio_pin_expression(config[CONF_FLOW_CONTROL_PIN])
         cg.add(var.set_flow_control_pin(pin))

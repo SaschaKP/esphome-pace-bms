@@ -33,7 +33,7 @@ CONFIG_SCHEMA = (
             ),
         }
     )
-    .extend(cv.polling_component_schema("10s"))
+    .extend(cv.polling_component_schema("5s"))
     .extend(
         pace_modbus.pace_modbus_device_schema(
             DEFAULT_PROTOCOL_VERSION, DEFAULT_ADDRESS

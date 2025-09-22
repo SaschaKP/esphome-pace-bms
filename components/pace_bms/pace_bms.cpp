@@ -7,7 +7,7 @@ namespace pace_bms {
 
 static const char *const TAG = "pace_bms";
 
-static const uint8_t MAX_NO_RESPONSE_COUNT = 12;//roughly 1 minute at 5 seconds update time
+static const uint8_t MAX_NO_RESPONSE_COUNT = 24;//roughly 2 minutes at 5 seconds update time
 
 void PaceBms::on_pace_modbus_data(const std::vector<uint8_t> &data) {
   this->reset_online_status_tracker_();
@@ -33,7 +33,7 @@ void PaceBms::on_telemetry_data_(const std::vector<uint8_t> &data) {
     return (uint16_t(data[i + 0]) << 8) | (uint16_t(data[i + 1]) << 0);
   };
 
-  ESP_LOGI(TAG, "Telemetry frame (%d bytes) received", data.size());
+  ESP_LOGI(TAG, "Telemetry frame (%d bytes) received for address 0x%02X", data.size(), data[7]);
   ESP_LOGVV(TAG, "  %s", format_hex_pretty(&data.front(), data.size()).c_str());
 
   // ->
@@ -50,7 +50,6 @@ void PaceBms::on_telemetry_data_(const std::vector<uint8_t> &data) {
   //   5    0x7A             Data length           LENID      122 / 2 = 61
   //   6    0x00             Data flag
   //   7    0x01             Responding Address               address of the responding battery (485B/A - RS232 *ONLY*)
-  ESP_LOGV(TAG, "Responding Address: %d", data[7]);
   //   8    0x10             Number of cells                  16
   uint8_t cells = (this->override_cell_count_) ? this->override_cell_count_ : data[8];
 
@@ -247,10 +246,8 @@ void PaceBms::on_status_data_(const std::vector<uint8_t>& data) {
     return (uint16_t(data[i + 0]) << 8) | (uint16_t(data[i + 1]) << 0);
   };
 
-  ESP_LOGI(TAG, "Status frame (%d bytes) received", data.size());
+  ESP_LOGI(TAG, "Status frame (%d bytes) received for address 0x%02X", data.size(), data[7]);
   ESP_LOGVV(TAG, "  %s", format_hex_pretty(&data.front(), data.size()).c_str());
-
-  ESP_LOGV(TAG, "Responding Address: %d", data[7]);
 
   uint8_t warn_limit = 3; //for future mods
 
@@ -412,14 +409,14 @@ float PaceBms::get_setup_priority() const {
 
 void PaceBms::update() {
   this->track_online_status_();
-  if (status_send_)
+  /*if (status_send_)
   {
     this->send(0x44, this->pack_); // status info
     status_send_ = false;
   } else {
     this->send(0x42, this->pack_);  // telemetry info
     status_send_ = true;
-  }
+  }*/
 }
 
 void PaceBms::publish_state_(binary_sensor::BinarySensor *binary_sensor, const bool &state) {
@@ -488,20 +485,5 @@ void PaceBms::publish_device_unavailable_() {
     this->publish_state_(cell.cell_voltage_sensor_, NAN);
   }
 }
-
-void PaceBms::setup() {
-  this->stop_poller();
-  // update interval is for all the sends, so we halve that value, since we have to do telemetry and the status
-  // with one shot, RS232 is an async operation and is pretty slow at 9600bps
-  this->set_retry(
-      "", this->get_rx_timeout() * (this->get_address() + 1), 1,
-      [this](const uint8_t remaining_attempts) {
-        this->set_update_interval(this->get_update_interval() >> 1);
-        this->start_poller();
-        return RetryResult::DONE;
-      },
-      1);
-}
-
 }  // namespace pace_bms
 }  // namespace esphome

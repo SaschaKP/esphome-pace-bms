@@ -16,6 +16,58 @@ void PaceModbus::setup() {
 }
 void PaceModbus::loop() {
   const uint32_t now = millis();
+  
+  if (now < this->last_send_) {  // timer will go back to zero after some time
+    this->last_send_ = now;
+    this->next_send_ = now + this->update_interval_;
+  }
+
+  if (this->send_device_ == 0xFF) {  // first start
+    for (auto *device : this->devices_) {
+      if (device->address_ > this->last_device_) {
+        this->last_device_ = device->address_;
+      }
+      if (this->send_device_ > device->address_) {
+        this->send_device_ = device->address_;
+        this->first_device_ = device->address_;
+      }
+    }
+    this->next_send_ = now + this->rx_timeout_;
+  } else if (this->next_send_ < now &&
+             now - this->last_send_ > this->rx_timeout_) {  // we'll start on the next loop
+    bool found = false;
+    for (auto *device : this->devices_) {
+      if (device->address_ == this->send_device_) {
+        found = true;
+        if (status_send_) {
+          device->send(0x44, this->send_device_);  // status info
+          this->status_send_ = false;
+          ++this->send_device_;
+          if (this->send_device_ > this->last_device_) {
+            this->send_device_ = this->first_device_;
+            this->next_send_ = now + this->update_interval_;  // interval restarts from here
+          }
+        } else {
+          device->send(0x42, this->send_device_);  // telemetry info
+          this->status_send_ = true;
+        }
+        break;
+      }
+    }
+    if (found) {
+      this->last_send_ = now;
+    } else {  // non-existant pack? try going forward and repeat on next cycle
+      ++this->send_device_;
+      if (this->send_device_ > this->last_device_) {
+        this->send_device_ = this->first_device_;
+        this->next_send_ = now + this->update_interval_;  // interval restarts from here
+      }
+    }
+  }
+
+  if (now < this->last_pace_modbus_byte_) { // timer will go back to zero after some time
+    this->last_pace_modbus_byte_ = now;
+  }
 
   if (now - this->last_pace_modbus_byte_ > this->rx_timeout_) {
     ESP_LOGVV(TAG, "Buffer cleared due to timeout: %s",
@@ -121,6 +173,12 @@ bool PaceModbus::parse_pace_modbus_byte_(uint8_t byte) {
 
   if (data_len < 10) {
     ESP_LOGW(TAG, "Response size is less than minimum allowed. Flushing RX buffer...");
+    return false;
+  }
+
+  if (data[3] != 0) {
+    ESP_LOGW(TAG, "Data received with error code 0x%02X (data_len: 0x%02X): %s", data[3], data[5],
+             format_hex_pretty(&data.front(), data.size()).c_str());
     return false;
   }
   uint8_t address = data[7];
