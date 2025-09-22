@@ -15,7 +15,7 @@ esphome:
 
 external_components:
   - source: github://SaschaKP/esphome-pace-bms@main
-    refresh: 1h
+    refresh: 0s
 
 wifi:
   ssid: !secret wifi_ssid
@@ -51,6 +51,8 @@ uart:
 pace_modbus:
   id: modbus0
   uart_id: uart_1
+  rx_timeout: 500ms
+  update_interval: 10s
 
 pace_bms:
   - id: bms1
@@ -60,7 +62,6 @@ pace_bms:
     address: 0x01
     protocol_version: 0x25
     pace_modbus_id: modbus0
-    update_interval: 5s
   - id: bms2
     # Dip switch configuration of a multi pack setup / address 0x2
     #  8    7    6    5    4    3    2    1
@@ -68,7 +69,6 @@ pace_bms:
     address: 0x02
     protocol_version: 0x25
     pace_modbus_id: modbus0
-    update_interval: 5s
 
 sensor:
   - platform: wifi_signal
