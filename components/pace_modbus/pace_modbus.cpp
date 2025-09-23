@@ -24,6 +24,8 @@ void PaceModbus::loop() {
       this->read_byte(&byte);
       this->rx_buffer_.clear();
     }
+
+    delay(50);
     return;
   }
 
