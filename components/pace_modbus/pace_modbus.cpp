@@ -9,7 +9,7 @@ namespace pace_modbus {
 
 static const char *const TAG = "pace_modbus";
 
-static const uint16_t MAX_RESPONSE_SIZE = 340;
+static const uint16_t MAX_RESPONSE_SIZE = 2048;//max size with data length is 0xFFF but no packet can reach that size, even with 0xFF (interrogate all packs) device id
 
 void PaceModbus::setup() {
   if (this->flow_control_pin_ != nullptr) {
