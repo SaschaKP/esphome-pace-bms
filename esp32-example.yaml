@@ -46,7 +46,7 @@ uart:
     baud_rate: 9600 
     tx_pin: GPIO17
     rx_pin: GPIO16
-    rx_buffer_size: 1024
+    rx_buffer_size: 3072 #to allow interrogation for all packs contemporarily (0xFF) in future development
 
 pace_modbus:
   id: modbus0
