@@ -53,6 +53,7 @@ pace_modbus:
   uart_id: uart_1
   rx_timeout: 500ms
   update_interval: 10s
+  wait_network: false #this defaults to false, when true the loop to check and send data waits for network and api/mqtt to be online
 
 pace_bms:
   - id: bms1
