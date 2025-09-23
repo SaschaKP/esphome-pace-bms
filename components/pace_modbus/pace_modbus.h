@@ -26,11 +26,13 @@ class PaceModbus : public uart::UARTDevice, public Component {
   void set_rx_timeout(uint16_t rx_timeout) { rx_timeout_ = rx_timeout; }
   void set_flow_control_pin(GPIOPin *flow_control_pin) { this->flow_control_pin_ = flow_control_pin; }
   void set_update_interval(uint16_t interval) { this->update_interval_ = interval; }
+  void set_wait_network(bool wait_network) { this->wait_network_ = wait_network; }
 
  protected:
   uint16_t rx_timeout_{500};
   GPIOPin *flow_control_pin_{nullptr};
   uint16_t update_interval_{10000};
+  bool wait_network_{false};
 
   bool parse_pace_modbus_byte_(uint8_t byte);
   bool status_send_{false};

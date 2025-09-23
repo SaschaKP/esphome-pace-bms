@@ -24,9 +24,10 @@ void PaceBms::on_pace_modbus_data(const std::vector<uint8_t> &data) {
     return;
   }
 
-  ESP_LOGW(TAG, "Unhandled data received (data_len: 0x%04X): %s",
-           ((uint16_t(data[4]) << 8) | (uint16_t(data[5]) << 0)) & 0x0FFF, //left 4 bits are for CRC, right 4 bits and a full byte are for size (0xFFF)
-           format_hex_pretty(&data.front(), data.size()).c_str());
+  // left 4 bits are for CRC, right 4 bits and a full byte are for size (0xFFF)
+  uint16_t data_len = (((uint16_t(data[4]) << 8) | (uint16_t(data[5]) << 0)) & 0x0FFF) >> 1; //number is always even
+
+  ESP_LOGW(TAG, "Unhandled data received (%d total bytes / data length: %d): %s", data.size(), data_len, format_hex_pretty(&data.front(), data.size()).c_str());
 }
 
 void PaceBms::on_telemetry_data_(const std::vector<uint8_t> &data) {
@@ -34,7 +35,7 @@ void PaceBms::on_telemetry_data_(const std::vector<uint8_t> &data) {
     return (uint16_t(data[i + 0]) << 8) | (uint16_t(data[i + 1]) << 0);
   };
 
-  uint16_t data_len = pace_get_16bit(4) & 0x0FFF;
+  uint16_t data_len = (pace_get_16bit(4) & 0x0FFF) >> 1;
 
   ESP_LOGI(TAG, "Telemetry frame (%d total bytes - data length %d) received for address 0x%02X", data.size(), data_len, data[7]);
   ESP_LOGVV(TAG, "  %s", format_hex_pretty(&data.front(), data.size()).c_str());
@@ -249,7 +250,7 @@ void PaceBms::on_status_data_(const std::vector<uint8_t>& data) {
     return (uint16_t(data[i + 0]) << 8) | (uint16_t(data[i + 1]) << 0);
   };
 
-  uint16_t data_len = pace_get_16bit(4) & 0x0FFF;
+  uint16_t data_len = (pace_get_16bit(4) & 0x0FFF) >> 1;
 
   ESP_LOGI(TAG, "Status frame (%d total bytes - data length %d) received for address 0x%02X", data.size(), data_len, data[7]);
   ESP_LOGVV(TAG, "  %s", format_hex_pretty(&data.front(), data.size()).c_str());
@@ -446,18 +447,22 @@ void PaceBms::publish_state_(text_sensor::TextSensor *text_sensor, const std::st
 }
 
 void PaceBms::track_online_status_() {
-  if (this->no_response_count_ < MAX_NO_RESPONSE_COUNT) {
-    this->no_response_count_++;
-  }
-  if (this->no_response_count_ == MAX_NO_RESPONSE_COUNT) {
-    this->publish_device_unavailable_();
-    this->no_response_count_++;
+  if (this->online_status_binary_sensor_ != nullptr) {
+    if (this->no_response_count_ < MAX_NO_RESPONSE_COUNT) {
+      this->no_response_count_++;
+    }
+    if (this->no_response_count_ == MAX_NO_RESPONSE_COUNT) {
+      this->publish_device_unavailable_();
+      this->no_response_count_++;
+    }
   }
 }
 
 void PaceBms::reset_online_status_tracker_() {
-  this->no_response_count_ = 0;
-  this->publish_state_(this->online_status_binary_sensor_, true);
+  if (this->online_status_binary_sensor_ != nullptr) {
+    this->no_response_count_ = 0;
+    this->publish_state_(this->online_status_binary_sensor_, true);
+  }
 }
 
 void PaceBms::publish_device_unavailable_() {

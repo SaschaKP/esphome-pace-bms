@@ -1,6 +1,8 @@
 #include "pace_modbus.h"
 #include "esphome/core/log.h"
 #include "esphome/core/helpers.h"
+#include "esphome/core/util.h"
+#include "esphome/components/network/util.h"
 
 namespace esphome {
 namespace pace_modbus {
@@ -15,6 +17,16 @@ void PaceModbus::setup() {
   }
 }
 void PaceModbus::loop() {
+  // if no network should we loop? 
+  if (wait_network_ && (!network::is_connected() || !remote_is_connected())) {
+    while (this->available()) {
+      uint8_t byte;
+      this->read_byte(&byte);
+      this->rx_buffer_.clear();
+    }
+    return;
+  }
+
   const uint32_t now = millis();
   
   if (now < this->last_send_) {  // timer will go back to zero after some time
@@ -177,9 +189,7 @@ bool PaceModbus::parse_pace_modbus_byte_(uint8_t byte) {
   }
 
   if (data[3] != 0) {
-    ESP_LOGW(TAG, "Data received with error code 0x%02X (data_len: 0x%04X): %s", data[3],
-             ((uint16_t(data[4]) << 8) | (uint16_t(data[5]) << 0)) & 0x0FFF, //left 4 bits are for CRC, right 4 bits and a full byte are for size (0xFFF)
-             format_hex_pretty(&data.front(), data.size()).c_str());
+    ESP_LOGW(TAG, "Data received with error code 0x%02X: %s", data[3], format_hex_pretty(&data.front(), data.size()).c_str());
     return false;
   }
   uint8_t address = data[7];
