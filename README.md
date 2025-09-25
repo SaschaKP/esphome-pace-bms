@@ -74,6 +74,12 @@ EOF
 esphome run esp32-example.yaml
 ```
 
+## Example of a stack-in-card in Home Assistant for battery monitor
+
+You can find the code, to use in conjunction with stack-in-card (look in HACS) in stack-in-card.yaml
+
+<img width="773" height="921" alt="image" src="https://github.com/user-attachments/assets/4c67c46e-35a7-4f87-a85f-0c3cc59acea1" />
+
 ## Example response all sensors enabled
 
 ```
