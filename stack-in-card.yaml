@@ -1,0 +1,98 @@
+type: custom:stack-in-card
+keep:
+  margin: false
+  box_shadow: false
+  background: false
+cards:
+  - type: grid
+    square: false
+    columns: 1
+    cards:
+      - type: markdown
+        content: <center><b><font color=#3090C7 size=6>BATTERY</font>
+  - type: grid
+    square: false
+    columns: 2
+    cards:
+      - type: markdown
+        content: >-
+          <center><b><font color=#41CD52 size=6>{{
+          states('sensor.battery_monitor_bank_1_total_voltage', rounded=True) }}
+          V</font></b><br>Power:&nbsp;&nbsp;<font color=#41CD52>{{
+          states('sensor.battery_monitor_bank_1_power', rounded=True) }}
+          W</font><br>Max Cap.:&nbsp;&nbsp;<font color=#41CD52>{{
+          states('sensor.battery_monitor_bank_1_battery_capacity', rounded=true)
+          }} Ah</font><br>Avg Volt:&nbsp;&nbsp;<font color=#41CD52>{{
+          states('sensor.battery_monitor_bank_1_average_cell_voltage',
+          rounded=true) }} V</font><br>Cell Delta:&nbsp;&nbsp;<font
+          color=#41CD52>{{
+          states('sensor.battery_monitor_bank_1_delta_cell_voltage',
+          rounded=true) }} V</font><br>Battery T1:&nbsp;&nbsp;<font
+          color=#41CD52>{{ states('sensor.battery_monitor_bank_1_temperature_1',
+          rounded=true) }} °C</font><br>Battery T3:&nbsp;&nbsp;<font
+          color=#41CD52>{{ states('sensor.battery_monitor_bank_1_temperature_3',
+          rounded=true) }} °C</font>
+      - type: markdown
+        content: >-
+          <center><b><font color=#41CD52 size=6>{{
+          states('sensor.battery_monitor_bank_1_current', rounded=True) }}
+          A</font></b><br>SOC:&nbsp;&nbsp;<font color=#41CD52>{{
+          states('sensor.battery_monitor_bank_1_state_of_charge', rounded=true)
+          }} %</font><br>Capacity:&nbsp;&nbsp;<font color=#41CD52>{{
+          states('sensor.battery_monitor_bank_1_residual_capacity',
+          rounded=true) }} Ah</font><br>Cycle Count:&nbsp;&nbsp;<font
+          color=#41CD52>{{
+          states('sensor.battery_monitor_bank_1_charging_cycles', rounded=true)
+          }}</font><br>MOS Temp.:&nbsp;&nbsp;<font color=#41CD52>{{
+          states('sensor.battery_monitor_bank_1_mosfet_temperature',
+          rounded=true) }} °C</font><br>Battery T2:&nbsp;&nbsp;<font
+          color=#41CD52>{{ states('sensor.battery_monitor_bank_1_temperature_2',
+          rounded=True) }} °C</font><br>Battery T4:&nbsp;&nbsp;<font
+          color=#41CD52>{{ states('sensor.battery_monitor_bank_1_temperature_4',
+          rounded=true) }} °C</font>
+  - type: grid
+    square: false
+    columns: 1
+    cards:
+      - type: markdown
+        content: <center><b><font color=orange size=6>Cells</b></center>
+  - type: grid
+    square: false
+    columns: 2
+    cards:
+      - type: markdown
+        content: >-
+          <center> {% set bank_id = 1 -%} {%- for idx in range(1, 9) %} {%- set
+          min_idx = states('sensor.battery_monitor_bank_%d_min_voltage_cell'
+          %bank_id) |int %} {%- set max_idx =
+          states('sensor.battery_monitor_bank_%d_max_voltage_cell' %bank_id)
+          |int %}           {%- set is_max = max_idx == idx %} {%- set is_min =
+          min_idx == idx %} {%- set cell_volt =
+          states("sensor.battery_monitor_bank_%d_cell_voltage_%d" |
+          format(bank_id, idx), rounded=true) %} {%- set is_balancing =
+          states('binary_sensor.battery_monitor_bank_%d_balancing_state_%d' |
+          format(bank_id, idx)) == 'on' %} {%- set font_start = '<font
+          color="aqua">' if is_max else '<font color="red">' if is_min else ''
+          %} {%- set font_end = '</font>' if is_max or is_min else '' %} {%- set
+          balance_text = '<font color="#41CD52">∆</font>' if is_balancing else
+          '' %} {{ "%02d" % idx }}.&nbsp;&nbsp; {{ font_start }} {{ cell_volt }}
+          V{{ font_end -}}&nbsp;&nbsp;{{balance_text}}<br> {% endfor %}
+          </center>
+      - type: markdown
+        content: >-
+          <center> {% set bank_id = 1 -%} {%- for idx in range(9, 17) %} {%- set
+          min_idx = states('sensor.battery_monitor_bank_%d_min_voltage_cell'
+          %bank_id) |int %} {%- set max_idx =
+          states('sensor.battery_monitor_bank_%d_max_voltage_cell' %bank_id)
+          |int %}           {%- set is_max = max_idx == idx %} {%- set is_min =
+          min_idx == idx %} {%- set cell_volt =
+          states("sensor.battery_monitor_bank_%d_cell_voltage_%d" |
+          format(bank_id, idx), rounded=true) %} {%- set is_balancing =
+          states('binary_sensor.battery_monitor_bank_%d_balancing_state_%d' |
+          format(bank_id, idx)) == 'on' %} {%- set font_start = '<font
+          color="aqua">' if is_max else '<font color="red">' if is_min else ''
+          %} {%- set font_end = '</font>' if is_max or is_min else '' %} {%- set
+          balance_text = '<font color="#41CD52">∆</font>' if is_balancing else
+          '' %} {{ "%02d" % idx }}.&nbsp;&nbsp; {{ font_start }} {{ cell_volt }}
+          V{{ font_end -}}&nbsp;&nbsp;{{balance_text}}<br> {% endfor %}
+          </center>
