@@ -107,6 +107,26 @@ class PaceBms : public PollingComponent, public pace_modbus::PaceModbusDevice {
     discharge_current_text_warning_sensor_ = pack_discharge_text_warning;
   }
 
+  void set_pack_protect_sensor(sensor::Sensor *protect_sensor) { protect_sensor_ = protect_sensor; }
+  void set_pack_text_protect_text_sensor(text_sensor::TextSensor *protect_text_sensor) {
+    protect_text_sensor_ = protect_text_sensor;
+  }
+
+  void set_pack_status_sensor(sensor::Sensor *status_sensor) { status_sensor_ = status_sensor; }
+  void set_pack_text_status_text_sensor(text_sensor::TextSensor *status_text_sensor) {
+    status_text_sensor_ = status_text_sensor;
+  }
+
+  void set_pack_config_sensor(sensor::Sensor *config_sensor) { config_sensor_ = config_sensor; }
+  void set_pack_text_config_text_sensor(text_sensor::TextSensor *config_text_sensor) {
+    config_text_sensor_ = config_text_sensor;
+  }
+
+  void set_pack_fault_sensor(sensor::Sensor *fault_sensor) { fault_sensor_ = fault_sensor; }
+  void set_pack_text_fault_text_sensor(text_sensor::TextSensor *fault_text_sensor) { 
+    fault_text_sensor_ = fault_text_sensor;
+  }
+
   void set_override_cell_count(uint8_t override_cell_count) { this->override_cell_count_ = override_cell_count; }
 
   void on_pace_modbus_data(const std::vector<uint8_t> &data) override;
@@ -143,6 +163,15 @@ class PaceBms : public PollingComponent, public pace_modbus::PaceModbusDevice {
   sensor::Sensor *discharge_current_warning_sensor_;
   text_sensor::TextSensor *discharge_current_text_warning_sensor_;
   
+  sensor::Sensor *protect_sensor_;
+  text_sensor::TextSensor *protect_text_sensor_;
+  sensor::Sensor *status_sensor_;
+  text_sensor::TextSensor *status_text_sensor_;
+  sensor::Sensor *config_sensor_;
+  text_sensor::TextSensor *config_text_sensor_;
+  sensor::Sensor *fault_sensor_;
+  text_sensor::TextSensor *fault_text_sensor_;
+    
   text_sensor::TextSensor *errors_text_sensor_;
 
   struct Cell {

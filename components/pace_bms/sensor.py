@@ -76,6 +76,10 @@ ICON_MAX_VOLTAGE_CELL = "mdi:battery-plus-outline"
 ICON_RESIDUAL_CAPACITY = "mdi:battery-50"
 ICON_BATTERY_CAPACITY = "mdi:battery-50"
 ICON_RATED_CAPACITY = "mdi:battery-50"
+ICON_STATUS_TRIANGLE = "mdi:alert"
+ICON_PROTECT_ALERT = "mdi:battery-alert"
+ICON_FAULT_STOP = "mdi:alert-octagon"
+ICON_CONFIG_LIST = "mdi:clipboard-list"
 
 ICON_CHARGING_CYCLES = "mdi:battery-sync"
 ICON_STATE_OF_HEALTH = "mdi:heart-flash"
@@ -109,6 +113,11 @@ CONF_TEMPERATURE_WARNING_6 = "temperature_warning_6"
 CONF_PACK_CHARGE_WARNING = "pack_charge_warning"
 CONF_PACK_VOLTAGE_WARNING = "pack_voltage_warning"
 CONF_PACK_DISCHARGE_WARNING = "pack_discharge_warning"
+
+CONF_PACK_PROTECT = "pack_protect"
+CONF_PACK_STATUS = "pack_status"
+CONF_PACK_CONFIG = "pack_config"
+CONF_PACK_FAULT = "pack_fault"
 
 CELLS = [
     CONF_CELL_VOLTAGE_1,
@@ -187,6 +196,10 @@ SENSORS = [
     CONF_PACK_CHARGE_WARNING,
     CONF_PACK_VOLTAGE_WARNING,
     CONF_PACK_DISCHARGE_WARNING,
+    CONF_PACK_PROTECT,
+    CONF_PACK_STATUS,
+    CONF_PACK_CONFIG,
+    CONF_PACK_FAULT,
 ]
 
 # pylint: disable=too-many-function-args
@@ -586,6 +599,26 @@ CONFIG_SCHEMA = PACE_BMS_COMPONENT_SCHEMA.extend(
         ),
         cv.Optional(CONF_PACK_DISCHARGE_WARNING): sensor.sensor_schema(
             icon=ICON_EMPTY,
+            accuracy_decimals=0,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        cv.Optional(CONF_PACK_PROTECT): sensor.sensor_schema(
+            icon=ICON_PROTECT_ALERT,
+            accuracy_decimals=0,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        cv.Optional(CONF_PACK_STATUS): sensor.sensor_schema(
+            icon=ICON_STATUS_TRIANGLE,
+            accuracy_decimals=0,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        cv.Optional(CONF_PACK_CONFIG): sensor.sensor_schema(
+            icon=ICON_CONFIG_LIST,
+            accuracy_decimals=0,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        cv.Optional(CONF_PACK_FAULT): sensor.sensor_schema(
+            icon=ICON_FAULT_STOP,
             accuracy_decimals=0,
             entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         ),

@@ -39,13 +39,26 @@ CONF_PACK_CHARGE_TEXT_WARNING = "pack_charge_text_warning"
 CONF_PACK_VOLTAGE_TEXT_WARNING = "pack_voltage_text_warning"
 CONF_PACK_DISCHARGE_TEXT_WARNING = "pack_discharge_text_warning"
 
+CONF_PACK_TEXT_PROTECT = "pack_text_protect"
+CONF_PACK_TEXT_STATUS = "pack_text_status"
+CONF_PACK_TEXT_CONFIG = "pack_text_config"
+CONF_PACK_TEXT_FAULT = "pack_text_fault"
+
 ICON_ERRORS = "mdi:alert-circle-outline"
+ICON_STATUS_TRIANGLE = "mdi:alert"
+ICON_PROTECT_ALERT = "mdi:battery-alert"
+ICON_FAULT_STOP = "mdi:alert-octagon"
+ICON_CONFIG_LIST = "mdi:clipboard-list"
 
 TEXT_SENSORS = [
     CONF_ERRORS,
     CONF_PACK_CHARGE_TEXT_WARNING,
     CONF_PACK_VOLTAGE_TEXT_WARNING,
     CONF_PACK_DISCHARGE_TEXT_WARNING,
+    CONF_PACK_TEXT_PROTECT,
+    CONF_PACK_TEXT_STATUS,
+    CONF_PACK_TEXT_CONFIG,
+    CONF_PACK_TEXT_FAULT,
 ]
 
 CELLS_TEXT_WARNING = [
@@ -181,6 +194,22 @@ CONFIG_SCHEMA = PACE_BMS_COMPONENT_SCHEMA.extend(
         ),
         cv.Optional(CONF_PACK_DISCHARGE_TEXT_WARNING): text_sensor.text_sensor_schema(
             icon=ICON_ERRORS,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        cv.Optional(CONF_PACK_TEXT_PROTECT): text_sensor.text_sensor_schema(
+            icon=ICON_PROTECT_ALERT,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        cv.Optional(CONF_PACK_TEXT_STATUS): text_sensor.text_sensor_schema(
+            icon=ICON_STATUS_TRIANGLE,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        cv.Optional(CONF_PACK_TEXT_CONFIG): text_sensor.text_sensor_schema(
+            icon=ICON_CONFIG_LIST,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        cv.Optional(CONF_PACK_TEXT_FAULT): text_sensor.text_sensor_schema(
+            icon=ICON_FAULT_STOP,
             entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         ),
     }

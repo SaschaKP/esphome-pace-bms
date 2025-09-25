@@ -191,9 +191,9 @@ static const char *const PROTECT_MESSAGES[16] = {
 };
 
 static const char *const STATUS_MESSAGES[8] = {
-    "Charge Current Limiter Disabled\n",       // bit 1
-    "Charge MOSFET On\n",                      // bit 2
-    "Discharge MOSFET On\n",                   // bit 3
+    "Charge Limit Off\n",                      // bit 1
+    "Charge MOS On\n",                         // bit 2
+    "Discharge MOS On\n",                      // bit 3
     "Discharging\n",                           // bit 4
     "Positive/Negative Terminals Inverted\n",  // bit 5
     "Charging\n",                              // bit 6
@@ -202,25 +202,36 @@ static const char *const STATUS_MESSAGES[8] = {
 };
 
 static const char *const FAULT_MESSAGES[8] = {
-    "Charge MOSFET fault\n",     // bit 1
-    "Discharge MOSFET fault\n",  // bit 2
-    "NTC fault\n",               // bit 3
-    "Comm Fault\n",              // bit 4
-    "Cell fault\n",              // bit 5
-    "Sampling Fault\n",          // bit 6
-    "CCB Fault\n",               // bit 7
-    "Heater Fault\n",            // bit 8
+    "Charge MOS fault\n",     // bit 1
+    "Discharge MOS fault\n",  // bit 2
+    "NTC fault\n",            // bit 3
+    "Comm Fault\n",           // bit 4
+    "Cell fault\n",           // bit 5
+    "Sampling Fault\n",       // bit 6
+    "CCB Fault\n",            // bit 7
+    "Heater Fault\n",         // bit 8
 };
 
 static const char *const CONFIG_MESSAGES[8] = {
-    "Warning Buzzer Enabled\n",         // bit 1  
-    "Charge MOSFET Turned Off\n",       // bit 2
-    "Discharge MOSFET Turned Off\n",    // bit 3
-    "",                                 // bit 4
-    "Charge Current Limiter Enabled\n", // bit 5
-    "Warning LED Enabled\n",            // bit 6
-    "Static Balance\n",                 // bit 7
-    "Undefined bit 8\n",                // bit 8
+    "Buzzer On\n",          // bit 1
+    "Charge MOS Off\n",     // bit 2
+    "Discharge MOS Off\n",  // bit 3
+    "HIGH\n",               // bit 4
+    "Charge Limit ",        // bit 5
+    "Warning LED On\n",     // bit 6
+    "Static Balance\n",     // bit 7
+    "Undef bit 8 On\n",     // bit 8
+};
+
+static const char *const CONFIG_OFF_MESSAGES[8] = {
+    "Buzzer Off\n",        // bit 1
+    "Charge MOS On\n",     // bit 2
+    "Discharge MOS On\n",  // bit 3
+    "LOW\n",               // bit 4
+    "",                    // bit 5
+    "Warning LED Off\n",   // bit 6
+    "Dynamic Balance\n",   // bit 7
+    "",                    // bit 8
 };
 
 // ==== Status Information
@@ -316,6 +327,8 @@ void PaceBms::on_status_data_(const std::vector<uint8_t>& data) {
     str.pop_back();
     ESP_LOGV(TAG, "Protect Messages: %s", str.c_str());
   }
+  this->publish_state_(this->protect_sensor_, protect);
+  this->publish_state_(this->protect_text_sensor_, str.c_str());
   str.clear();
   
   uint8_t status = data[offset + 1 + cells + 1 + temperatures + 5];  // system status value
@@ -328,18 +341,30 @@ void PaceBms::on_status_data_(const std::vector<uint8_t>& data) {
     str.pop_back();
     ESP_LOGV(TAG, "Status Messages: %s", str.c_str());
   }
+  this->publish_state_(this->status_sensor_, status);
+  this->publish_state_(this->status_text_sensor_, str.c_str());
   str.clear();
 
   uint8_t conf_status = data[offset + 1 + cells + 1 + temperatures + 6];  // config status value
   for (uint8_t i = 0; i < 8; ++i) {
-    if ((conf_status & (1 << i)) != 0) {
-      str.append(CONFIG_MESSAGES[i]);
+    if (i != 3) {
+      if ((conf_status & (1 << i)) != 0) {
+        str.append(CONFIG_MESSAGES[i]);
+        if (i == 4) {
+          str.append(CONFIG_MESSAGES[i - 1]);
+        }
+      }
+      else {
+        str.append(CONFIG_OFF_MESSAGES[i]);
+      }
     }
   }
   if (str.length() > 1) {
     str.pop_back();
     ESP_LOGV(TAG, "Config Messages: %s", str.c_str());
   }
+  this->publish_state_(this->config_sensor_, conf_status);
+  this->publish_state_(this->config_text_sensor_, str.c_str());
   str.clear();
 
   uint8_t fault_status = data[offset + 1 + cells + 1 + temperatures + 7];  // fault status value
@@ -352,6 +377,8 @@ void PaceBms::on_status_data_(const std::vector<uint8_t>& data) {
     str.pop_back();
     ESP_LOGV(TAG, "Fault Messages: %s", str.c_str());
   }
+  this->publish_state_(this->fault_sensor_, fault_status);
+  this->publish_state_(this->fault_text_sensor_, str.c_str());
   str.clear();
 
   uint16_t balancing_status = pace_get_16bit(offset + 1 + cells + 1 + temperatures + 8);  // balancing state per cell
