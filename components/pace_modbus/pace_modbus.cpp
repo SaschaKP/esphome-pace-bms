@@ -50,7 +50,6 @@ void PaceModbus::loop() {
     this->next_send_ = now + this->rx_timeout_;
   } else if (this->next_send_ < now &&
              now - this->last_send_ > this->rx_timeout_) {  // we'll start on the next loop
-    bool found = false;
     if (this->request_all_packs_) {
       auto *device = this->get_device(this->first_device_);
       uint8_t proto = 0x25;
