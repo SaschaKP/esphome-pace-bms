@@ -189,7 +189,6 @@ class PaceBms : public PollingComponent, public pace_modbus::PaceModbusDevice {
 
   uint8_t override_cell_count_{0};
   uint8_t no_response_count_{0};
-  bool status_send_{false};
 
   void publish_state_(binary_sensor::BinarySensor *binary_sensor, const bool &state);
   void publish_state_(sensor::Sensor *sensor, float value);

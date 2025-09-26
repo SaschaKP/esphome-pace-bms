@@ -54,6 +54,7 @@ pace_modbus:
   rx_timeout: 500ms
   update_interval: 10s
   wait_network: false #this defaults to false, when true the loop to check and send data waits for network and api/mqtt to be online
+  request_all_packs: false #this defaults to false, when true all packs will be asked at once, shortening the requests timing *experimental*
 
 pace_bms:
   - id: bms1

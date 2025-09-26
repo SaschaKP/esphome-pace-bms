@@ -14,6 +14,7 @@ CONF_RX_TIMEOUT = "rx_timeout"
 CONF_PROTOCOL_VERSION = "protocol_version"
 CONF_OVERRIDE_PACK = "override_pack"
 CONF_WAIT_NETWORK = "wait_network"
+CONF_REQUEST_ALL_PACKS = "request_all_packs"
 
 pace_modbus_ns = cg.esphome_ns.namespace("pace_modbus")
 PaceModbus = pace_modbus_ns.class_("PaceModbus", cg.Component, uart.UARTDevice)
@@ -32,6 +33,7 @@ CONFIG_SCHEMA = (
                 cv.positive_time_period_milliseconds,
                 cv.Range(min=core.TimePeriod(milliseconds=5000), max=core.TimePeriod(milliseconds=60000))),
             cv.Optional(CONF_WAIT_NETWORK, default="false"): cv.boolean,
+            cv.Optional(CONF_REQUEST_ALL_PACKS, default="false") : cv.boolean,
             cv.Optional(CONF_FLOW_CONTROL_PIN): pins.gpio_output_pin_schema,
         }
     )
@@ -49,6 +51,7 @@ async def to_code(config):
     cg.add(var.set_rx_timeout(config[CONF_RX_TIMEOUT]))
     cg.add(var.set_update_interval(config[CONF_UPDATE_INTERVAL]))
     cg.add(var.set_wait_network(config[CONF_WAIT_NETWORK]))
+    cg.add(var.set_request_all_packs(config[CONF_REQUEST_ALL_PACKS]))
     if CONF_FLOW_CONTROL_PIN in config:
         pin = await gpio_pin_expression(config[CONF_FLOW_CONTROL_PIN])
         cg.add(var.set_flow_control_pin(pin))

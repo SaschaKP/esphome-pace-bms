@@ -16,6 +16,7 @@ void PaceModbus::setup() {
     this->flow_control_pin_->setup();
   }
 }
+
 void PaceModbus::loop() {
   // if no network should we loop? 
   if (wait_network_ && (!network::is_connected() || !remote_is_connected())) {
@@ -50,10 +51,25 @@ void PaceModbus::loop() {
   } else if (this->next_send_ < now &&
              now - this->last_send_ > this->rx_timeout_) {  // we'll start on the next loop
     bool found = false;
-    for (auto *device : this->devices_) {
-      if (device->address_ == this->send_device_) {
-        found = true;
-        if (status_send_) {
+    if (this->request_all_packs_) {
+      auto *device = this->get_device(this->first_device_);
+      uint8_t proto = 0x25;
+      if (device != nullptr) {
+        proto = device->get_protocol_version();
+      }
+      if (this->status_send_) {
+        this->send(proto, 0xFF, 0x44, 0xFF);
+        this->status_send_ = false;
+        this->next_send_ = now + this->update_interval_; 
+      } else {
+        this->send(proto, 0xFF, 0x42, 0xFF);
+        this->status_send_ = true;
+      }
+      this->last_send_ = now;
+    } else {
+      auto *device = this->get_device(send_device_);
+      if (device != nullptr) {
+        if (this->status_send_) {
           device->send(0x44, this->send_device_);  // status info
           this->status_send_ = false;
           ++this->send_device_;
@@ -65,16 +81,13 @@ void PaceModbus::loop() {
           device->send(0x42, this->send_device_);  // telemetry info
           this->status_send_ = true;
         }
-        break;
-      }
-    }
-    if (found) {
-      this->last_send_ = now;
-    } else {  // non-existant pack? try going forward and repeat on next cycle
-      ++this->send_device_;
-      if (this->send_device_ > this->last_device_) {
-        this->send_device_ = this->first_device_;
-        this->next_send_ = now + this->update_interval_;  // interval restarts from here
+        this->last_send_ = now;
+      } else {  // non-existant pack? try going forward and repeat on next cycle
+        ++this->send_device_;
+        if (this->send_device_ > this->last_device_) {
+          this->send_device_ = this->first_device_;
+          this->next_send_ = now + this->update_interval_;  // interval restarts from here
+        }
       }
     }
   }
@@ -194,18 +207,43 @@ bool PaceModbus::parse_pace_modbus_byte_(uint8_t byte) {
     ESP_LOGW(TAG, "Data received with error code 0x%02X: %s", data[3], format_hex_pretty(&data.front(), data.size()).c_str());
     return false;
   }
-  uint8_t address = data[7];
 
-  bool found = false;
-  for (auto *device : this->devices_) {
-    if (device->address_ == address) {
-      device->on_pace_modbus_data(data);
-      found = true;
+  if (request_all_packs_) {
+    std::vector<uint8_t> bdata;
+    uint8_t last_addr = data[7];
+    if (last_addr == 0) {
+      last_addr = 16;
     }
-  }
+    uint16_t real_dlen = ((((((uint16_t(data[4]) << 8) | (uint16_t(data[5]) << 0)) & 0x0FFF) >> 1) - 2)) / last_addr;
+    uint16_t idx = 8;
+    uint8_t addr = 1;
+    for (uint16_t i = 0; i < real_dlen + 8; ++i) {
+      bdata.push_back(data[i]);
+    }
 
-  if (!found) {
-    ESP_LOGW(TAG, "Got PaceModbus frame from unknown address 0x%02X! ", address);
+    bdata[4] = (real_dlen + 2) * 2 >> 8;
+    bdata[5] = (real_dlen + 2) * 2;
+    for (uint8_t addr = 1; addr <= last_addr; ++addr) {
+      bdata[7] = addr & 0x0F;
+      for (uint16_t i = 8; idx < data_len && i < real_dlen + 8; ++idx, ++i) {
+        bdata[i] = data[idx];
+      }
+      auto *device = this->get_device(addr);
+      if (device != nullptr) {
+        device->on_pace_modbus_data(bdata);
+      } else {
+        ESP_LOGW(TAG, "Got PaceModbus frame from not configured address 0x%02X! ", bdata[7]);
+      }
+    }
+  } else {
+    uint8_t address = data[7];
+
+    auto *device = this->get_device(address);
+    if (device != nullptr) {
+      device->on_pace_modbus_data(data);
+    } else {
+      ESP_LOGW(TAG, "Got PaceModbus frame from unknown address 0x%02X! ", address);
+    }
   }
 
   // return false to reset buffer
@@ -254,6 +292,16 @@ void PaceModbus::send(uint8_t protocol_version, uint8_t address, uint8_t functio
 
   if (this->flow_control_pin_ != nullptr)
     this->flow_control_pin_->digital_write(false);
+}
+
+PaceModbusDevice* PaceModbus::get_device(const uint8_t address) const {
+  for (auto *device : this->devices_) {
+    if (device->address_ == address) {
+      return device;
+    }
+  }
+
+  return nullptr;
 }
 
 }  // namespace pace_modbus

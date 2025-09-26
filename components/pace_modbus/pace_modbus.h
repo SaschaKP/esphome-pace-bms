@@ -27,8 +27,11 @@ class PaceModbus : public uart::UARTDevice, public Component {
   void set_flow_control_pin(GPIOPin *flow_control_pin) { this->flow_control_pin_ = flow_control_pin; }
   void set_update_interval(uint16_t interval) { this->update_interval_ = interval; }
   void set_wait_network(bool wait_network) { this->wait_network_ = wait_network; }
+  void set_request_all_packs(bool request_all_packs) { this->request_all_packs_ = request_all_packs; }
 
  protected:
+  PaceModbusDevice* get_device(const uint8_t address) const;
+
   uint16_t rx_timeout_{500};
   GPIOPin *flow_control_pin_{nullptr};
   uint16_t update_interval_{10000};
@@ -36,6 +39,7 @@ class PaceModbus : public uart::UARTDevice, public Component {
 
   bool parse_pace_modbus_byte_(uint8_t byte);
   bool status_send_{false};
+  bool request_all_packs_{false};
   std::vector<uint8_t> rx_buffer_;
   uint32_t last_pace_modbus_byte_{0};
   uint32_t last_send_{0};
@@ -56,7 +60,7 @@ class PaceModbusDevice {
   void send(uint8_t function, uint8_t value) {
     this->parent_->send(this->protocol_version_, this->address_, function, value);
   }
-  uint8_t get_address() { return this->address_; }
+  uint8_t get_protocol_version() { return this->protocol_version_; }
 
  protected:
   friend PaceModbus;
